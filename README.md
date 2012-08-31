@@ -4,5 +4,4 @@ Use: Garden evaluation tool for <a href="http://www.metroblooms.org">Metro Bloom
 
 To Do: 
 Refactor code
-Add functionality for other types of evaluation
-- 
+Add functionality for other types of evaluations
