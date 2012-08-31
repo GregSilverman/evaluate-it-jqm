@@ -1,0 +1,408 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>PhoneGap</title>
+        <script type="text/javascript" charset="utf-8" src="js/cordova-1.7.0rc1.js"></script>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title></title>
+
+        <script type='text/javascript' src='js/jquery-1.6.4.js'></script>
+        <link rel="stylesheet" type="text/css" href="css/normalize.css">
+        <script type='text/javascript' src="js/jquery.validate.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.1.0.css">
+      <!--  <link rel="stylesheet" href="css/jquery.ui.datepicker.mobile.css" /> -->
+        <script type='text/javascript' src="js/jquery.mobile-1.0.1.js"></script>
+        <script type='text/javascript' src="js/jquery.json-2.3.js"></script>
+        <script type='text/javascript' src="js/date.js"></script>
+
+       <!-- <script>
+            //reset type=date inputs to text
+            $(document).bind("mobileinit", function() {
+                $.mobile.page.prototype.options.degradeInputs.date = true;
+            });
+        </script>-->
+        <!--<script src="http://code.jquery.com/mobile/1.0a4.1/jquery.mobile-1.0a4.1.min.js"></script>-->
+       <!-- <script src="js/jQuery.ui.datepicker.js"></script>
+        <script src="js/jquery.ui.datepicker.mobile.js"></script> -->
+
+        <!-- database stuff -->
+        <script type='text/javascript' src='js/evaluate.it.db.js'></script>
+        <!-- geolocation stuff -->
+        <script type='text/javascript' src='js/evaluate.it.geolocation.js'></script>
+        <!-- misc stuff -->
+        <script type='text/javascript' src="js/evaluate.it.misc.js"></script>
+
+        <style type='text/css'>
+            label.error {
+                color: red;
+                font-size: 16px;
+                font-weight: normal;
+                line-height: 1.4;
+                margin-top: 0.5em;
+                width: 100%;
+                float: none;
+            }
+
+            @media screen and (orientation: portrait) {
+                label.error {
+                    margin-left: 0;
+                    display: block;
+                }
+            }
+
+            @media screen and (orientation: landscape) {
+                label.error {
+                    display: inline-block;
+                    margin-left: 22%;
+                }
+            }
+
+            em {
+                color: red;
+                font-weight: bold;
+                padding-right: .25em;
+            }
+
+            * {
+                font-family: Verdana;
+                font-size: 96%;
+            }
+            /* label { width: 10em; float: left; }
+             label.error { float: none; color: red; padding-left: .5em; vertical-align: top; }*/
+            p {
+                clear: both;
+            }
+            .submit {
+                margin-left: 12em;
+            }
+            em {
+                font-weight: bold;
+                padding-right: 1em;
+                vertical-align: top;
+            }
+        </style>
+    </head>
+    <body onload="onBodyLoad()">
+
+        <div data-role="page" id="mainPage" data-theme="e">
+            <form  id="mainForm" >
+                <div data-role="content">
+                    <img style="width: 288px; height: 100px" src="images/logo.gif" />
+                    <fieldset>
+                        <div data-role="fieldcontain">
+                            <select name="mainMenu" id="mainMenu" data-theme="a" data-mini="true" data-inline="true">
+                                <option value="" selected> Select evaluation type </option><!-- TODO: add lookup in site_type -->
+                                <option value="1"> Garden </option>
+                                <!--<option value="2"> Rain Garden Check-up </option>
+                                <option value="3"> Other Stuff </option>-->
+                            </select>
+                            <a href="#testDb" data-role="button" data-inline="true" data-theme="a" name="location" value="submit-value" >Data management</a>
+                            <a href="#selectLocationToEvaluate" data-role="button" data-inline="true" data-theme="a" name="selectLocation" value="submit-value" onClick="SelectLocationToEvaluate()">Select Garden to Evaluate</a>
+                        </div>
+                    </fieldset>
+                </div>
+            </form>
+        </div>
+
+        <!-- test functions -->
+        <div data-role="page" data-theme="e" id="testDb">
+            <form  id="testDbForm" >
+                <h1>Data Management</h1>
+                <!--<a href="#" id="postdata-button" data-role="button" data-inline="true" onClick="SendJson()")>POST JSON Data</a>-->
+                <a href="#selectDataToRemote" id="postdata-button" data-role="button" data-inline="true" data-theme="a" onClick="SelectEvaluationToPost()")>POST Completed Evaluations to Remote</a>
+                <a href="#" id="getdata-button" data-role="button" data-inline="true" data-theme="a" onClick="json()">Load Evaluations to Mobile</a>
+                <!--<input type="button" value="Load Evaluations to Mobile" data-role="button" data-inline="true" onclick="json()">-->
+                <a href="#mainPage" type="submit" data-role="button" data-inline="true" data-theme="a">Return to Main</a>
+            </form>
+        </div>
+
+        <div data-role="page" data-theme="e" id="selectDataToRemote">
+            <form  id="selectDataToRemoteForm" >
+                <!-- print out all completed evaluations -->
+                <div id="lbUploadEvaluation"></div>
+
+                <a href="#mainPage" type="submit" data-role="button" data-inline="true">Return to Main</a>
+            </form>
+        </div>
+
+        <div data-role="page" data-theme="e" id="dataToRemote">
+            <form  id="dataToRemoteForm" >
+
+                <!-- print out evaluation upload status-->
+                <div id="lbUploadEvaluation"></div>
+
+                <!--<input type="button" value="POST JSON Data" data-role="button" data-inline="true" onclick="AssembleDataToPost()">-->
+                <!--<a href="#" id="postdata-button" data-role="button" data-inline="true" onClick="AssembleDataToPost()")></a>-->
+
+                <a href="#selectDataToRemote" type="submit" data-role="button" data-inline="true" onClick="SelectEvaluationToPost()">Return to Select POST Data</a>
+                <a href="#mainPage" type="submit" data-role="button" data-inline="true">Return to Main</a>
+            </form>
+        </div>
+
+        <!-- form div for selection of evaluation location -->
+        <div data-role="page" data-theme="e" id="selectLocationToEvaluate">
+            <form  id="selectLocationToEvaluateForm" >
+                <div data-role="content">
+                    <div data-role="fieldcontain">
+
+                        <!-- print out all sites assigned to evaluator -->
+                        <div id="lbLocation"></div>
+
+                        <a href="#mainPage" name="home" class="submit" type="submit" data-role="button" data-inline="true"  data-theme="a">Return to Main</a>
+
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- form div for site to evaluate -->
+        <div data-role="page" data-theme="e" id="location">
+            <form  id="locationForm" >
+                <div data-role="content">
+
+                    <!-- print out all sites assigned to evaluator -->
+                    <div id="lbWhere"></div>
+
+                    <div data-role="fieldcontain">
+                        <fieldset data-role="controlgroup" data-mini="true">
+                            <label for="dateOfEvaluation"> <em>* </em>Date of evaluation: </label>
+                            <!--<input type="date" id="dateOfEvaluation" name="dateOfEvaluation" class="date">-->
+                            <input type="date" name="dateOfEvaluation" id="dateOfEvaluation" value=""  />   
+                        </fieldset>
+                        <fieldset data-role="controlgroup" data-mini="true">
+                            <label for="gardenerName"> <em>* </em>Gardener name: </label>
+                            <input id="gardenerName" name="gardenerName" placeholder="" type="text">
+                        </fieldset>
+                        <fieldset data-role="controlgroup" data-mini="true">
+                            <label for="neighborhood"> <em>* </em>Neighborhood: </label>
+                            <input id="neighborhood" name="neighborhood" placeholder="" value="" type="text">
+                        </fieldset>
+                    </div>
+
+                    <div data-role="fieldcontain">
+                        <fieldset data-role="controlgroup">
+                            <legend>
+                                Check here if:
+                            </legend>
+                            <input type="checkbox" name="checked-exists" id="checked-exists" class="custom" />
+                            <label for="checked-exists">Garden no longer exists</label>
+                        </fieldset>
+                    </div>
+
+                    <div data-role="fieldcontain">
+                        <input type="button" value="Update Date, Existence, Neighborhood and Gardener" data-role="button" data-inline="true"  type="submit" data-theme="a" name="submit" value="submit-value" onclick="UpdateLocationPage()">
+                        <!-- was validateSite() -->
+
+                        <!--<a href="#mainPage" id="z" data-role="button" data-inline="true" data-theme="a" name="z" class="submit" type="submit" value="submit-value">Reset and return to main</a>-->
+                        <a href="#geolocale" data-role="button" data-inline="true" data-theme="a" name="location" value="submit-value">Geolocation test</a>
+                        <a href="#ratingsFeatures" data-role="button"  data-inline="true" type="submit" data-theme="a" name="submit" value="submit-value">Evaluate It!</a>
+                        <a href="#viewEvaluation" id="postdata-button" data-role="button" data-inline="true" data-theme="a")>View Evaluation Object</a>
+                        <a href="#mainPage" id="res" data-role="button" data-inline="true" data-theme="a" name="res" class="submit" type="submit"  value="submit-value">Return to Main</a>
+                        <!--<a href="#mainPage" name="home" class="submit" type="submit" data-role="button" data-inline="true">Return to Main</a>-->
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+        <div data-role="page" data-theme="e" id="viewEvaluation">
+            <form  id="selectEvaluationToView" >
+                <!-- print out all evaluation object -->
+
+                <div id="lbViewEvaluation"></div>
+
+                <legend>
+                    Entered evaluation:
+                </legend>
+                <div id="lbEvaluation"></div>
+                <br>
+
+                <legend>
+                    Entered site/garden:
+                </legend>
+                <div id="lbSite"></div>
+                <br>
+
+                <legend>
+                    Entered Gardener:
+                </legend>
+                <div id="lbGardener"></div>
+                <br>
+
+                <legend>
+                    Entered Geolocation:
+                </legend>
+                <div id="lbGeolocale"></div>
+                <br>
+
+                <legend>
+                    Entered Award:
+                </legend>
+                <div id="lbAward"></div>
+                <br>
+
+                <legend>
+                    Entered Factor:
+                </legend>
+                <div id="lbFactor"></div>
+                <br>
+
+                <legend>
+                    Entered Feature:
+                </legend>
+                <div id="lbFeature"></div>
+                <br>
+
+                <!-- print out all requested data -->
+
+                <a href="#mainPage" type="submit" data-role="button" data-inline="true">Return to Main</a>
+            </form>
+        </div>
+
+        <!-- form div for ratings used in scoring -->
+        <div data-role="page" data-theme="e" id="ratingsFeatures">
+            <form  id="ratingsFeaturesForm" >
+                <div data-role="content">
+                    <div data-role="fieldcontain" id="garden"  data-theme="a">
+                        <label for="useOfColor"> <em>* Use of color </em>(visual impact)</label>
+                        <select name="useOfColor" id="useOfColor" class="ratingsClass" data-mini="true" data-inline="true">
+                            <option value=""> Rating </option>
+                            <option value="4"> 4 </option>
+                            <option value="3"> 3 </option>
+                            <option value="2"> 2 </option>
+                            <option value="1"> 1 </option>
+                            <option value="0"> 0 </option>
+                        </select>
+
+                        <label for="plantVariety"> <em>* Plant variety </em>(grasses, flowers, trees, shrubs) </label>
+                        <select name="plantVariety" id="plantVariety" class="ratingsClass" data-mini="true" data-inline="true">
+                            <option value=""> Rating </option>
+                            <option value="4"> 4 </option>
+                            <option value="3"> 3 </option>
+                            <option value="2"> 2 </option>
+                            <option value="1"> 1 </option>
+                            <option value="0"> 0 </option>
+                        </select>
+
+                        <label for="design"> <em>* Design </em>(balance, creative, natural) </label>
+                        <select name="design" id="design" class="ratingsClass" data-mini="true" data-inline="true">
+                            <option value=""> Rating </option>
+                            <option value="4"> 4 </option>
+                            <option value="3"> 3 </option>
+                            <option value="2"> 2 </option>
+                            <option value="1"> 1 </option>
+                            <option value="0"> 0 </option>
+                        </select>
+
+                        <label for="maintenance"> <em>* Maintenance </em>(well cultivated, no standing water)</label>
+                        <select name="maintenance" id="maintenance" class="ratingsClass" data-mini="true" data-inline="true">
+                            <option value=""> Rating </option>
+                            <option value="4"> 4 </option>
+                            <option value="3"> 3 </option>
+                            <option value="2"> 2 </option>
+                            <option value="1"> 1 </option>
+                            <option value="0"> 0 </option>
+                        </select>
+
+                        <label for="environmentalStewardship"> <em>* Environmental Stewardship </em>(native species, minimal annuals, turf reduction, concave boulevard, redirected downspouts) </label>
+                        <select name="environmentalStewardship" class="ratingsClass" id="environmentalStewardship" data-mini="true" data-inline="true">
+                            <option value=""> Rating </option>
+                            <option value="4"> 4 </option>
+                            <option value="3"> 3 </option>
+                            <option value="2"> 2 </option>
+                            <option value="1"> 1 </option>
+                            <option value="0"> 0 </option>
+                        </select>
+                    </div>
+
+                    <input type="button" value="Compute Score" data-role="button" data-inline="true" data-theme="a" onclick="computeScore()">
+
+                    <!--output summation of ratings as determined in computeScore function-->
+                    <fieldset id="sumId" data-role="controlgroup" data-mini="true">
+                        <label for="sumRating"> <em>* </em>Computed Sum of Ratings </label>
+                        <input id="sumRating" name="sumRating" type="text" size="2">
+                    </fieldset>
+                    <p>
+
+                        <div data-role="fieldcontain">
+                            <label for="featuresMenu" class="select"><em>* </em>Garden features:</label>
+                            <select name="featuresMenu" id="featuresMenu" multiple="multiple" data-native-menu="false" data-theme="a">
+                                <option value="">Choose features</option>
+                                <option value="1">Rain garden</option>
+                                <option value="2">Rain barrel</option>
+                            </select>
+                        </div>
+
+                        <fieldset data-role="controlgroup" data-mini="true">
+                            <label for="generalComment"> <em>* </em>General Comments: </label>
+                            <input id="generalComment" placeholder=""  type="text">
+                        </fieldset>
+
+                        <input type="button" value="Save Ratings and Features" data-role="button" data-inline="true"  type="submit" data-theme="a" name="submit" value="submit-value" onclick="LoadRatingsFeatures()">
+                        <!-- was validateSite() -->
+                        <!--<div class="hide_me"> Used to hide, however, since rules are convoluted, we just display a warning-->
+                        <a href="#award" id="give_award" type="submit" data-role="button" data-inline="true" data-theme="a" >Consider this garden for an award</a>
+                        <!--</div>-->
+                        <a href="#mainPage" id="btn-reset" name="btn-reset" type="submit" class="submit" data-role="button" data-inline="true" data-theme="a" >Return to Main</a>
+
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- form div for awards: control display  -->
+        <div data-role="page" data-theme="e" id="award">
+
+            <form  id="awardForm" >
+                <div data-role="fieldcontain">
+                    <label for="awardMenu"> <em>* </em>Consider this garden for: </label>
+                    <select name="awardMenu" id="awardMenu" data-mini="true" data-inline="true" data-mini="true" data-theme="a" >
+                        <option value=""> Type of award </option>
+                        <option value="1"> Best Residential </option>
+                        <option value="2"> Best Residential Raingarden </option>
+                        <option value="3"> Best Boulevard </option>
+                        <option value="4"> Best Business </option>
+                        <option value="5"> Best Business Raingarden </option>
+                        <option value="6"> Best Apartment </option>
+                        <option value="7"> Best Community </option>
+                        <option value="8"> Best Public </option>
+                        <option value="9"> Best School </option>
+                        <option value="10"> Best Congregation </option>
+                        <option value="11"> Best Window Box/Container </option>
+                        <option value="12"> Nate Siegel </option>
+                        <option value="13"> Special award (specify below:) </option>
+                    </select>
+                </div>
+
+                <fieldset data-role="controlgroup" data-mini="true" >
+                    <label for="specialAward"> <em>* </em>Special Award Comment: </label>
+                    <input id="specialAward" placeholder=""  type="text">
+                </fieldset>
+
+                <div data-role="fieldcontain">
+                    <input type="button" value="Save Award" data-role="button" data-inline="true" type="submit" data-theme="a" name="submit" value="submit-value" onclick="AssignAward() ">
+                    <a href="#ratingsFeatures"  id="btn" name="btn" class="submit" type="submit" data-role="button"  data-inline="true" data-theme="a" value="submit-value">Return to evaluation</a>
+                    <!--<a href="#mainPage" id="btn" name="btn" class="submit" type="submit" data-role="button" data-inline="true">Return to Main</a>-->
+                </div>
+
+            </form>
+        </div>
+
+        <div data-role="page" data-theme="e" id="geolocale">
+            <form  id="geolocaleForm" >
+
+                <p id="geolocation">
+                    Watching geolocation...
+                </p>
+                <br>
+
+                <input type="button" value="Save Geolocation Coordinates" data-role="button" data-inline="true" type="submit" data-theme="a" name="submit" value="submit-value" onclick="GetSiteIdForGeo()">
+                <a href="#location" type="submit" data-role="button" data-inline="true" data-theme="a">Back</a>
+            </form>
+        </div>
+
+        <!--</form>-->
+        <script></script>
+    </body>
+</html>
