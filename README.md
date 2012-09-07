@@ -4,8 +4,10 @@ Use: Garden evaluation tool for <a href="http://www.metroblooms.org">Metro Bloom
 
 Platform: Android
 
+Testing: To run in browser, run script localHTTPServeriStart.sh in assets/www folder and connect via  URL http://localhost:8000/
+
 To Do: 
 *  Add detailed description 
-*  Refactor code;
-*  Add functionality for other types of evaluations;
+*  Refactor code
+*  Add functionality for other types of evaluations
 *  Create iOS branch
