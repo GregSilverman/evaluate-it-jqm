@@ -17,6 +17,10 @@
 /*"jslint_options":  "--es5" */
 /*jslint todo: true*/
 
+// NOTE: URIs below have been removed
+// global config with sensitive data is 
+// in the works
+
 // global variables and functions
 var	db, 
 	shortName = 'EvaluateItDB', 
