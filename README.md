@@ -13,5 +13,5 @@ To Do:
 *  Create iOS branch
 
 Note: 
-* To make project work, rename assets/www/js/evaluate.it.db.1.js to assets/www/js/evaluate.it.db.js (this is a temporary fix to not post the actual URL for POST/GET from the actual working copy of this file... I wlll be pulling these out of the actual files that get posted here)
+* To make project work, rename assets/www/js/evaluate.it.db.1.js to assets/www/js/evaluate.it.db.js (this is a temporary fix to not post the URL for POST/GET from the actual working copy of this file... I wlll be pulling these out of the actual files that get posted here)
 
