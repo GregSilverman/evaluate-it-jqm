@@ -1214,7 +1214,7 @@ function assembleDataToPost(id, toPost) {
 }
 
 // append to object as subobject
-function addFactorRating(encoded, obj, id) {
+function addFactorRating(encoded, obj, id, toPost) {
 
 	if (!window.openDatabase) {
 		alert('Databases are not supported in this browser.');
