@@ -6,6 +6,10 @@
 *.exe
 *.o
 *.so
+*.apk
+*.ap_
+*.dex
+*.cache
 
 # Packages #
 ############
@@ -15,7 +19,7 @@
 *.dmg
 *.gz
 *.iso
-*.jar
+#*.jar
 *.rar
 *.tar
 *.zip
@@ -36,3 +40,10 @@
 Icon?
 ehthumbs.db
 Thumbs.db
+*.swp
+*.~lock*
+
+# Files with information that should not be made available to the public #
+######################
+evaluate.it.config.js
+

@@ -1,25 +1,26 @@
 // db
 
-// TODO: date of evaluation: better control with a DatePicker
+// TODO: 
+// date of evaluation: better control with a DatePicker
 // required values: neighborhood
 // evaluator_id as a variable for completedBy and for filter to load data
 // select/lookup for evaluator_id
-
-// TODO: get rid of abomination at bottom!! (list of evaluation objects)
 // ensure no dups inserted into tables
 // clear form: rather kludgy... need to address through refactoring
 // better style!
-// editable forms!!!!!!!!!!
+
+
+// refactorization
+// get rid of duplicate fns: 
+//		postJson (better utilization of pages Paul created for testing and output),
+//		and GetSiteId
 // MVC (ember.js)
+// editable forms!!!!!!!!!!
 
 // set JSLint exceptions
 /*jslint es5: true */
 /*"jslint_options":  "--es5" */
 /*jslint todo: true*/
-
-// NOTE: URIs below have been removed
-// global config with sensitive data is 
-// in the works
 
 // global variables and functions
 var	db, 
@@ -831,18 +832,31 @@ function insertGeolocationToDb(latitude, longitude, accuracy, timeStamp, siteId)
 // expression that invokes it even before its success callback fires,
 // thus, there are no guarantees that the variable will capture any data, hence we select async: false 
 // and use a deferred object to grab the state after it has been returned
-var json = function () {
+var json = function (environ,evaluator_id) {
 
-	// grab all evaluation data specific to an evaluator_id
-	var	url = "http://yourURIhereWithCallbackFuction", 
-		json = [],
-			// set as a deferred object
-		reqObj = $.ajax({ 
-			async : false,
-			global : false,
-			url : url,
-			dataType : "jsonp"
-		});
+	// TODO: use
+	
+	var	url,
+		json,
+		reqObj;
+	
+	url = webServer; 
+	
+	// get from test or production data
+	if (environ === 'dev') {
+		url = url + '/' + collectionDevelopment + '/' + callback + evaluator_id;
+	} else if (environ === 'prod') { // post to prod db
+		url = url + '/' + collectionProduction + '/' + callback + evaluator_id;
+	}
+	
+	json = [];
+	// set as a deferred object
+	reqObj = $.ajax({ 
+		async : false,
+		global : false,
+		url : url,
+		dataType : "jsonp"
+	});
 
 	reqObj.done(function (data) {
 		json = data;
@@ -1260,11 +1274,37 @@ function addFactorRating(encoded, obj, id) {
 	return;
 }
 
-function sendJson(obj, id) {
+function sendJson(obj, id, environ, action) {
+	
+	// set up url
+	
+	var url = webServer;
+	
+	// post to test db
+	if (environ === 'env') {
+		url = url + '/' + collectionDevelopment;
+	
+		// post data
+		if (action === 'post') {
+			url = url + '/' + showResults;
+		} else if (action === 'response') {  // test response from server
+			url = url + '/' + testHttpResponse;
+		}	
+		
+	} else if (environ === 'env') { // post to prod db
+		url = url + '/' + collectionProduction;
+		
+		// post data
+		if (action === 'post') {
+			url = url + '/' + showResults;
+		} else if (action === 'response') { //test response from server
+			url = url + '/' + showResults;
+		}
+	}
 
 	$.ajax({
 		type : "POST",
-		url : "http://yourURIhereToPost", // to POST
+		url : url,
 		data : obj,
 		success : function (data, textStatus, jqXHR) {
 			console.log('success' + textStatus + jqXHR.responseText);

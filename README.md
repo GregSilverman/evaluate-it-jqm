@@ -12,6 +12,5 @@ To Do:
 *  Add functionality for other types of evaluations
 *  Create iOS branch
 
-Note: 
-* To make project work, rename assets/www/js/evaluate.it.db.1.js to assets/www/js/evaluate.it.db.js (this is a temporary fix to not post the URL for POST/GET from the actual working copy of this file... I wlll be pulling these out of the actual files that get posted here)
+Note: You will need to configure the global URL variables for the Ajax JSONP call, as well as for the POST to the web server with completed evaluations, both in the file assets/www/js/evaluate.it.config.js (not included in this repository). You can also use this file for other sensitive configuration data storage. **Still need to set 'environ' and 'action' variables in index.html** 
 
