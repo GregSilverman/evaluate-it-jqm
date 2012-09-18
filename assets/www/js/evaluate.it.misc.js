@@ -115,7 +115,9 @@ $('#location').live('pageshow', function (event, ui) {
 $('#dataToRemote').live('pageshow', function (event, ui) {
 	console.log('Parameter ID: ' + sessionStorage.ParameterID);
 
-	assembleDataToPost(sessionStorage.ParameterID);
+	var toPost = true; // use for posting object to web server
+
+	assembleDataToPost(sessionStorage.ParameterID, toPost);
 
 	// console.log('Selection of location yields:' +
 	// SelectValues(sessionStorage.ParameterID));
@@ -123,11 +125,13 @@ $('#dataToRemote').live('pageshow', function (event, ui) {
 
 $('#viewEvaluation').live('pageshow', function (event, ui) {
 
-	var id = sessionStorage.ParameterID;
+	var id = sessionStorage.ParameterID,
+		toPost = false; // use for test output of object
+	
 	console.log('Parameter ID: ' + sessionStorage.ParameterID);
 
 	// view object to be posted
-	assembleEvaluationView(sessionStorage.ParameterID);
+	assembleDataToPost(sessionStorage.ParameterID, toPost);
 
 	// view all stored data on device
 	loadEvaluation(id);

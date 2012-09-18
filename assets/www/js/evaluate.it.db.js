@@ -832,7 +832,7 @@ function insertGeolocationToDb(latitude, longitude, accuracy, timeStamp, siteId)
 // expression that invokes it even before its success callback fires,
 // thus, there are no guarantees that the variable will capture any data, hence we select async: false 
 // and use a deferred object to grab the state after it has been returned
-var json = function (environ,evaluator_id) {
+var json = function (environ, evaluator_id) { // TODO: get evaluator_id
 
 	// TODO: use
 	
@@ -981,7 +981,7 @@ function selectEvaluationToPost() {
 			+ 'INNER JOIN site s ON s.site_id = e.site_id   '
 			+ 'WHERE (e.date_entered_on_device_by_evaluator IS NOT NULL) AND ((e.date_of_evaluation IS NOT NULL)  OR (e.no_longer_exists = 1))  '
 			+ 'ORDER BY e.date_entered_on_device_by_evaluator';
-
+	
 	// clear element
 	$('#lbLocation').html('');
 	
@@ -1029,7 +1029,7 @@ function selectEvaluationToPost() {
 	return;
 }
 
-function assembleDataToPost(id) {
+function assembleDataToPost(id, toPost) {
 	if (!window.openDatabase) {
 		alert('Databases are not supported in this browser.');
 		return;
@@ -1203,7 +1203,7 @@ function assembleDataToPost(id) {
 
 						encoded = $.toJSON(obj);
 						alert("data" + encoded);
-						addFactorRating(encoded, obj, id);
+						addFactorRating(encoded, obj, id, toPost);
 						console.log('Session evaluation_id onward to POST!!!');
 						// sendJson(obj);
 					}
@@ -1262,10 +1262,11 @@ function addFactorRating(encoded, obj, id) {
 					if (i === 4) {
 
 						console.log(' ' + $.toJSON(obj));
-
 						alert('encoded' + $.toJSON(obj));
 
-						sendJson(obj, id);
+						if (toPost) {
+							sendJson(obj, id);
+						}
 					}
 				}
 			}
@@ -1345,261 +1346,7 @@ function updateWhenPosted(id) {
 	return false;
 }
 
-// TODO: fix the following monstrocity!! meant only as a short-term fix for list
-// view
-
-function assembleEvaluationView(id) {
-	if (!window.openDatabase) {
-		alert('Databases are not supported in this browser.');
-		return;
-	}
-
-	var	currentYear = (new Date()).getFullYear(),
-		// kludge until edit/delete records functionality is added
-		selectStatement = 'SELECT * FROM evaluation e INNER JOIN site s  '
-			+ 'ON e.site_id = s.site_id LEFT OUTER JOIN  '
-			+ '(SELECT * FROM gardener g INNER JOIN  '
-			+ 'evaluation e ON e.site_id = g.site_id   '
-			+ 'WHERE e.evaluation_id = ?  '
-			+ 'ORDER BY id Desc  '
-			+ 'LIMIT 1) AS g ON s.site_id  = g.site_id LEFT OUTER JOIN  '
-			+ '(SELECT * FROM evaluation_award ea INNER JOIN  '
-			+ 'evaluation e ON e.evaluation_id = ea.evaluation_id  '
-			+ 'WHERE e.evaluation_id = ?  '
-			+ 'ORDER BY id Desc  '
-			+ 'LIMIT 1) AS ea ON e.evaluation_id = ea.evaluation_id LEFT OUTER JOIN  '
-			+ '(SELECT * FROM evaluation_feature ef INNER JOIN  '
-			+ 'evaluation e ON e.evaluation_id = ef.evaluation_id   '
-			+ 'WHERE e.evaluation_id = ?  '
-			+ 'ORDER BY id Desc  '
-			+ 'LIMIT 1) AS efeature ON e.evaluation_id = efeature.evaluation_id LEFT OUTER JOIN  '
-			+ '(SELECT * FROM geo_location gl INNER JOIN  '
-			+ 'evaluation e ON e.site_id = gl.site_id '
-			+ 'WHERE e.evaluation_id = ?  ' + 'ORDER BY id Desc  '
-			+ 'LIMIT 1) AS gl ON s.site_id  = gl.site_id  '
-			+ 'WHERE e.evaluation_id = ?  ' + 'ORDER BY id Desc  ' + 'LIMIT 1';
-
-	// this line clears out any content in the elements on the page so
-	// that the next few lines will show updated
-	// content and not just keep repeating lines
-
-	$('#lbViewEvaluation').html('');
-	$('#lbViewEvaluation').val('');
-
-	console.log('Select me:' + selectStatement);
-	console.log('Session evaluation_id to POST:' + id);
-	// this next section will select all the content from the site table as
-	// queried by the passed parameter
-
-	db.transaction(function (transaction) {
-		transaction.executeSql(selectStatement,
-			[ id, id, id, id, id ],
-			function (transaction, result) {
-				if (result !== null && result.rows !== null) {
-					var	i = 0,
-						max,
-						row,
-						rating,
-						rain_garden = 0, 
-						rain_barrel = 0, 
-						bestof = 0, 
-						nateSiegelAward = 0, 
-						specialAwardSpecified = null, 
-						no_longer_exists, 
-						obj, 
-						encoded;
-					for (i = 0, max = result.rows.length; i < max; i += 1) {
-						row = result.rows.item(i);
-												
-						// TODO: make the damn lookup classes!
-	
-						// assign rating
-						if (row.sum_rating >= 18) {
-							rating = 'EG';
-						} else if (row.sum_rating >= 14 && row.sum_rating < 18) {
-							rating = 'GD';
-						} else if (row.sum_rating >= 9 && row.sum_rating < 14) {
-							rating = 'GM';
-						} else if (row.sum_rating >= 5 && row.sum_rating < 9) {
-							rating = 'CA';
-						} else {
-							rating = '';
-						}
-	
-						// features
-						if (row.feature_id === 1) {
-							rain_garden = 1;
-						} else if (row.feature_id === 2) {
-							rain_barrel = 1;
-						} else if (row.feature_id === 3) {
-							rain_garden = 1;
-							rain_barrel = 1;
-						}
-	
-						// award
-						switch (row.award_id) {
-						case 1:
-							bestof = 'Residential';
-							break;
-						case 2:
-							bestof = 'Residential Raingarden';
-							break;
-						case 3:
-							bestof = 'Boulevard';
-							break;
-						case 4:
-							bestof = 'Business';
-							break;
-						case 5:
-							bestof = 'Business Raingarrden';
-							break;
-						case 6:
-							bestof = 'Apartment';
-							break;
-						case 7:
-							bestof = 'Community';
-							break;
-						case 8:
-							bestof = 'Public';
-							break;
-						case 9:
-							bestof = 'School';
-							break;
-						case 10:
-							bestof = 'Congregation';
-							break;
-						case 11:
-							bestof = 'Windowbox/container';
-							break;
-						case 12:
-							bestof = 'NateSiegel';
-							nateSiegelAward = 1;
-							break;
-						case 13:
-							bestof = 'Special';
-							break;
-						}
-
-
-						if (!row.no_longer_exists) {
-							no_longer_exists = 0;
-						} else {
-							no_longer_exists = 1;
-						}
-	
-						obj = {
-							evaluation_id : row.evaluation_id,
-							score : row.sum_rating,
-							rating : rating,
-							rating_year : currentYear, 
-							bestof : bestof,
-							special_award_specified : row.special_award_specified,
-							nate_siegel_award : nateSiegelAward, 
-							score_card : {
-								color : null,
-								plant_variety : null,
-								design : null,
-								maintenance : null,
-								environmental_stewardship : null
-							},
-							date_evaluated : row.date_of_evaluation,
-							general_comments : row.comments,
-							evaluator : {
-								evaluator_id : '265',
-								completed_by : '265'
-							},
-							rainbarrel : rain_barrel,
-							raingarden : rain_garden,
-							garden : {
-								garden_id : row.site_id,
-								no_longer_exists : no_longer_exists,
-								address : {
-									neighborhood : row.neighborhood,
-									county : 'Hennepin',
-								},
-								gardener : {
-									name : row.name
-								},
-								geolocation : {
-									latitude : row.latitude,
-									longitude : row.longitude,
-									accuracy : row.accuracy
-								},
-							},
-						};
-	
-						encoded = $.toJSON(obj);
-						alert("data" + encoded);
-						addFactorRatingView(encoded, obj, id);
-						console.log('Session evaluation_id onward to POST!!!');
-						// sendJson(obj);
-					}
-				}
-			}, errorHandler);
-	}, errorHandler, nullHandler);
-	return;
-}
-
-// append to object as subobject
-function addFactorRatingView(encoded, obj, id) {
-
-	if (!window.openDatabase) {
-		alert('Databases are not supported in this browser.');
-		return;
-	}
-
-	var SelectStatement = 'SELECT * FROM evaluation_factor   '
-			+ 'WHERE evaluation_id = ?  ' + 'ORDER BY id Desc LIMIT 5';
-
-	console.log('Ratings factor add to obj SelectStatement' + SelectStatement);
-	console.log('Session evaluation_id to POST:' + id);
-
-	db.transaction(function (transaction) {
-		transaction.executeSql(SelectStatement, [ id ], function (transaction, result) {
-			if (result !== null && result.rows !== null) {
-				var	i = 0,
-					max,
-					row,
-					factor;
-				for (i = 0, max = result.rows.length; i < max; i += 1) {
-					row = result.rows.item(i);
-					console.log('queried row' + row.rating + '  evaluation'
-							+ row.evaluation_id);
-
-					// append to string object
-					// descending due to way data aare stored
-					switch (i) {
-					case 4:
-						obj.score_card.color = row.rating;
-						break;
-					case 3:
-						obj.score_card.plant_variety = row.rating;
-						break;
-					case 2:
-						obj.score_card.design = row.rating;
-						break;
-					case 1:
-						obj.score_card.maintenance = row.rating;
-						break;
-					case 0:
-						obj.score_card.environmental_stewardship = row.rating;
-						break;
-					}
-					
-					if (i === 4) {
-						console.log(' ' + $.toJSON(obj));
-
-						alert('encoded' + $.toJSON(obj));
-
-					}
-				}
-			}
-		}, errorHandler);
-	}, errorHandler, nullHandler);
-	return;
-}
-
-// more eembarassing kludginess to fill in for actual data view lists
+// more embarassing kludginess to fill in for actual data view lists
 
 function loadEvaluation(id) {
 	if (!window.openDatabase) {
