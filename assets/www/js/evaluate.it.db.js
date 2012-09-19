@@ -33,8 +33,8 @@ var	db,
 	assignFeature,
 	assignRating,
 	getSiteId,
-	getSiteIdForGeolocation,
 	insertGardener,
+	insertGeolocation,
 	insertGeolocationToDb,
 	loadAwrdToDb,
 	loadDbSite,
@@ -306,7 +306,8 @@ function updateLocationPage() {
 		dateOfEvaluation = $('#dateOfEvaluation').val(), 
 		neighborhood = $('#neighborhood').val(), 
 		gardenerName = $('#gardenerName').val(),
-		updateStatement;
+		updateStatement,
+		obj;
 
 	console.log('Parameter ID: ' + sessionStorage.ParameterID);
 	console.log('dateOfEvaluation:' + dateOfEvaluation);
@@ -343,7 +344,11 @@ function updateLocationPage() {
 	// insert gardener name if given
 	console.log('gardenerName:' + gardenerName);
 	if (gardenerName) {
-		getSiteId(gardenerName);
+		obj = {
+			var: gardenerName
+		};
+		console.log('obj:' + $.toJSON(obj));
+		getSiteId(obj.var);
 	}
 
 }
@@ -406,39 +411,6 @@ function updateHood(neighborhood) {
 
 }
 
-// get site_id for inserting given gardener's name
-function getSiteId(gardenerName) {
-
-	if (!window.openDatabase) {
-		alert('Databases are not supported in this browser.');
-		return;
-	}
-
-	var	id = sessionStorage.ParameterID,  // get evaluation_id
-		// select list of evaluations that have been completed for upload to remote
-		selectStatement = 'SELECT * FROM evaluation ' 
-			+ 'WHERE (evaluation_id = ?)';
-
-	console.log('Parameter ID: ' + sessionStorage.ParameterID);
-	console.log('selectStatement: ' + selectStatement);
-
-	db.transaction(function (transaction) {
-		transaction.executeSql(selectStatement, [ id ], function (transaction, result) {
-			if (result !== null && result.rows !== null) {
-				var	i,
-					row;
-				// get output from select
-				for (i = 0; i < 1; i += 1) {
-					row = result.rows.item(i);
-					insertGardener(row.site_id, gardenerName);
-				}
-			}
-		}, errorHandler);
-	}, errorHandler, nullHandler);
-
-	alert("success");
-	return false;
-}
 
 function insertGardener(siteId, gardenerName) {
 
@@ -756,27 +728,31 @@ function loadAwardToDb(value, comment) {
 	return false;
 }
 
-// TODO: combine with getSiteId to have one-and-only one instance of this
-// function
-function getSiteIdForGeolocation() {
+function nullParamaterToGetSiteId() {
+	var obj = {
+		var: null
+	};
+	
+	console.log('obj:' + $.toJSON(obj));
+}
+
+// TODO: combine with getSiteId to have one-and-only one instance of this function
+function getSiteId(obj) {
 
 	if (!window.openDatabase) {
 		alert('Databases are not supported in this browser.');
 		return;
 	}
 
-	var	latitude = localStorage.getItem("latitude"), 
-		longitude = localStorage.getItem("longitude"), 
-		accuracy = localStorage.getItem("accuracy"), 
-		timeStamp = localStorage.getItem("timeStamp"), 
-		id = sessionStorage.ParameterID, // get evaluation_id
+	var id = sessionStorage.ParameterID, // get evaluation_id
 		selectStatement = 'SELECT * FROM evaluation    '
-			+ 'WHERE (evaluation_id = ?)';
-
-	console.log('latitude: longitude: accuracy: timeStamp ' + latitude 
-			+ ' ' +  longitude 
-			+ ' ' +  accuracy 
-			+ ' ' +  timeStamp);
+			+ 'WHERE (evaluation_id = ?)',
+		latitude, 
+		longitude, 
+		accuracy, 
+		timeStamp;
+		
+	console.log('obj: ' + obj);
 	console.log('Parameter ID: ' + sessionStorage.ParameterID);
 	console.log('selectStatement: ' + selectStatement);
 
@@ -789,11 +765,22 @@ function getSiteIdForGeolocation() {
 					row;
 				for (i = 0; i < 1; i += 1) {
 					row = result.rows.item(i);
-					
 					// get siteId
 					console.log('row.site_id: ' + row.site_id);
 
-					insertGeolocationToDb(latitude, longitude, accuracy, timeStamp, row.site_id);
+					if (obj.parameter === null) {
+						latitude = localStorage.getItem("latitude");
+						longitude = localStorage.getItem("longitude"); 
+						accuracy = localStorage.getItem("accuracy"); 
+						timeStamp = localStorage.getItem("timeStamp"); 
+						console.log('latitude: longitude: accuracy: timeStamp ' + latitude 
+								+ ' ' +  longitude 
+								+ ' ' +  accuracy 
+								+ ' ' +  timeStamp);
+						insertGeolocationToDb(latitude, longitude, accuracy, timeStamp, row.site_id);
+					} else if (obj.parameter !== null && typeof obj.parameter === "string") {
+						insertGardener(row.site_id, gardenerName);
+					}
 				}
 			}
 		}, errorHandler);
@@ -832,7 +819,7 @@ function insertGeolocationToDb(latitude, longitude, accuracy, timeStamp, siteId)
 // expression that invokes it even before its success callback fires,
 // thus, there are no guarantees that the variable will capture any data, hence we select async: false 
 // and use a deferred object to grab the state after it has been returned
-var json = function (environ, evaluator_id) { // TODO: get evaluator_id
+var getJson = function () { // TODO: get evaluator_id
 
 	// TODO: use
 	
@@ -842,10 +829,10 @@ var json = function (environ, evaluator_id) { // TODO: get evaluator_id
 	
 	url = webServer; 
 	
-	// get from test or production data
+	// get from dev or production data
 	if (environ === 'dev') {
 		url = url + '/' + collectionDevelopment + '/' + callback + evaluator_id;
-	} else if (environ === 'prod') { // post to prod db
+	} else if (environ === 'prod') {
 		url = url + '/' + collectionProduction + '/' + callback + evaluator_id;
 	}
 	
@@ -1275,14 +1262,18 @@ function addFactorRating(encoded, obj, id, toPost) {
 	return;
 }
 
-function sendJson(obj, id, environ, action) {
+function sendJson(obj, id) {
 	
 	// set up url
 	
 	var url = webServer;
 	
+	console.log('url: ' + url);
+	console.log('environ: ' + environ);
+	console.log('action: ' + action);
+	
 	// post to test db
-	if (environ === 'env') {
+	if (environ === 'dev') {
 		url = url + '/' + collectionDevelopment;
 	
 		// post data
@@ -1292,7 +1283,7 @@ function sendJson(obj, id, environ, action) {
 			url = url + '/' + testHttpResponse;
 		}	
 		
-	} else if (environ === 'env') { // post to prod db
+	} else if (environ === 'prod') { // post to prod db
 		url = url + '/' + collectionProduction;
 		
 		// post data
@@ -1302,6 +1293,8 @@ function sendJson(obj, id, environ, action) {
 			url = url + '/' + showResults;
 		}
 	}
+	
+	console.log('new url: ' + url);
 
 	$.ajax({
 		type : "POST",
