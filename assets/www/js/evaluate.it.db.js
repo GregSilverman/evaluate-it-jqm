@@ -33,6 +33,7 @@ var	db,
 	assignFeature,
 	assignRating,
 	getSiteId,
+	initializeParamaterGetSiteId,
 	insertGardener,
 	insertGeolocation,
 	insertGeolocationToDb,
@@ -728,12 +729,14 @@ function loadAwardToDb(value, comment) {
 	return false;
 }
 
-function nullParamaterToGetSiteId() {
+function initializeParamaterGetSiteId() {
 	var obj = {
 		var: null
 	};
 	
 	console.log('obj:' + $.toJSON(obj));
+	getSiteId(obj);
+	
 }
 
 // TODO: combine with getSiteId to have one-and-only one instance of this function
