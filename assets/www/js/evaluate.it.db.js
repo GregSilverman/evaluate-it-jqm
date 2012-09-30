@@ -529,6 +529,8 @@ function loadFactorToDb(value, label) {
 	case 'environmentalStewardship':
 		factor_id = 5;
 		break;
+	default:
+		factor_id = -1;  // TODO: throw error
 	}
 
 	// this is the section that actually inserts the values into the User table
@@ -622,6 +624,8 @@ function assignFeature() {
 			loadFeatureToDb(3);
 			console.log("Woop! Woop!:" + result);
 			break;
+		default:
+			break;	
 		}
 	}
 		
@@ -1103,6 +1107,8 @@ function assembleDataToPost(id, toPost) {
 							rain_garden = 1;
 							rain_barrel = 1;
 							break;
+						default:
+							break;
 						}
 
 						// award
@@ -1146,6 +1152,8 @@ function assembleDataToPost(id, toPost) {
 							break;
 						case 13:
 							bestof = 'Special';
+							break;
+						default:
 							break;
 						}
 
@@ -1247,6 +1255,8 @@ function addFactorRating(encoded, obj, id, toPost) {
 					case 0:
 						obj.score_card.environmental_stewardship = row.rating;
 						break;
+					default:
+						factor_id = -1;
 					}
 
 					if (i === 4) {
