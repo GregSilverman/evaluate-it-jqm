@@ -1,6 +1,6 @@
-Cross platform mobile app built using Phonegap framework, JQM and HTML 5.
+Cross platform mobile app built using Phonegap framework, JQuery Mobile, Backbone.js, Require.js, Underscore.js and HTML 5.
 
-Use: Garden evaluation tool for <a href="http://www.metroblooms.org">Metro Blooms</a>
+Use: Garden evaluation tool developed for use by <a href="http://www.metroblooms.org">Metro Blooms</a>
 
 Platform: Android
 
