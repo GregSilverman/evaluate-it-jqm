@@ -1,40 +1,15 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <title>PhoneGap</title>
-        <script type="text/javascript" charset="utf-8" src="js/cordova-1.7.0rc1.js"></script>
+        <title>EvaluateIt!</title>
+
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title></title>
 
-        <script type='text/javascript' src='js/jquery-1.6.4.js'></script>
+        <script src="js/libs/require.js" data-main="js/mobile"></script>
+
         <link rel="stylesheet" type="text/css" href="css/normalize.css">
-        <script type='text/javascript' src="js/jquery.validate.min.js"></script>
         <link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.1.0.css">
-        <!--  <link rel="stylesheet" href="css/jquery.ui.datepicker.mobile.css" /> -->
-        <script type='text/javascript' src="js/jquery.mobile-1.0.1.js"></script>
-        <script type='text/javascript' src="js/jquery.json-2.3.js"></script>
-        <script type='text/javascript' src="js/date.js"></script>
-
-        <!-- <script>
-        //reset type=date inputs to text
-        $(document).bind("mobileinit", function() {
-        $.mobile.page.prototype.options.degradeInputs.date = true;
-        });
-        </script>-->
-        <!--<script src="http://code.jquery.com/mobile/1.0a4.1/jquery.mobile-1.0a4.1.min.js"></script>-->
-        <!-- <script src="js/jQuery.ui.datepicker.js"></script>
-        <script src="js/jquery.ui.datepicker.mobile.js"></script> -->
-
-        <!-- database stuff -->
-        <script type='text/javascript' src='js/evaluate.it.db.js'></script>
-        <!-- geolocation stuff -->
-        <script type='text/javascript' src='js/evaluate.it.geolocation.js'></script>
-        <!-- misc stuff -->
-        <script type='text/javascript' src="js/evaluate.it.misc.js"></script>
-        <!-- this is where we set up sensitive data, including URLs for POST/GET, and security configurations -->
-        <script type='text/javascript' src="js/evaluate.it.config.js"></script>
-
 
         <style type='text/css'>
             label.error {
@@ -86,7 +61,7 @@
             }
         </style>
     </head>
-    <body onload="onBodyLoad()">
+    <body>
 
         <div data-role="page" id="mainPage" data-theme="e">
             <form  id="mainForm" >
@@ -101,7 +76,7 @@
                                 <option value="3"> Rain Garden Inspection</option>
                             </select>
                             <a href="#testDb" data-role="button" data-inline="true" data-theme="a" value="submit-value" >Data management</a>
-                            <a href="#selectLocationToEvaluate" data-role="button" data-inline="true" data-theme="a" value="submit-value" onClick="selectLocationToEvaluate()">Select Garden to Evaluate</a>
+                            <a href="#testMe" data-role="button" data-inline="true" data-theme="a" value="submit-value" onClick="selectLocationToEvaluate()">Select Garden to Evaluate</a>
                         </div>
                     </fieldset>
                 </div>
@@ -151,6 +126,27 @@
             </form>
         </div>
 
+        <!-- underscore template test -->
+        <div id="target"></div>
+
+        <script type="text/html" id='usageList'>
+
+            <% _.each(json,function(item,key,list){ %>
+            <% var f = item.location, g = item.category; %><!-- create more variables -->
+
+            <!-- use variables -->
+
+            <li data-id="<%= key %>" class="ui-li ui-li-static ui-btn-up-c ui-corner-top">
+
+            <%= item.category %>
+            <%= item.location %>
+
+            </li>
+
+            <% }); %>
+
+        </script>
+
         <!-- form div for site to evaluate -->
         <div data-role="page" data-theme="e" id="location">
             <form  id="locationForm" >
@@ -193,7 +189,7 @@
                         <a href="#ratingsFeatures" data-role="button"  data-inline="true" type="submit" data-theme="a" value="submit-value">Evaluate It!</a>
                         <a href="#viewEvaluation" id="postdata-button" data-role="button" data-inline="true" data-theme="a">View Evaluation Object</a>
                         <a href="#mainPage" id="res" data-role="button" data-inline="true" data-theme="a" class="submit" type="submit"  value="submit-value">Return to Main</a>
-                        
+
                     </div>
 
                 </div>
@@ -390,5 +386,5 @@
             </form>
         </div>
 
- </body>
+    </body>
 </html>

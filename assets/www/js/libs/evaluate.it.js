@@ -1,26 +1,18 @@
-// db
-
 // TODO: 
+// redesign #selectLocationToEvaluate using template to menu 
+// redesign #postToRemote using template to menu on HTML form to utilize fn selectImage if so desire - check box - to upload an image to remote server
 // date of evaluation: better control with a DatePicker
-// required values: neighborhood
+// validation: neighborhood, others, as per model using backboneValidateAll
 // evaluator_id as a variable for completedBy and for filter to load data
 // select/lookup for evaluator_id
+// secure cookie auth
 // ensure no dups inserted into tables
 // clear form: rather kludgy... need to address through refactoring
 // better style!
 
 
 // refactorization
-// get rid of duplicate fns: 
-//		postJson (better utilization of pages Paul created for testing and output),
-//		and GetSiteId
-// MVC (ember.js)
-// editable forms!!!!!!!!!!
-
-// set JSLint exceptions
-/*jslint es5: true */
-/*"jslint_options":  "--es5" */
-/*jslint todo: true*/
+// MVC (backbone.js, require.js)
 
 // global variables and functions
 var	db, 
@@ -28,6 +20,8 @@ var	db,
 	version = '1.0', 
 	displayName = 'EvaluateItDB', 
 	maxSize = 90000,
+	onError,
+	onSuccess,
 	addFactorRating,
 	addFactorRatingView,
 	assignFeature,
@@ -47,11 +41,209 @@ var	db,
 	onBodyLoad,
 	onError,
 	onSuccess,
-	sendJson,
+	postToRemote,
 	updateEvaluationRatingComment,
 	updateExistence,
 	updateHood,
-	updateWhenPosted;
+	updateWhenPosted,
+	postError,
+	postSuccess,
+	postWithImage,
+	selectImage,
+	assembleDataToPost,
+	loadEvaluation,
+	loadEvaluationFactor,
+	loadEvaluationAward,
+	loadEvaluationFeature,
+	loadGardener,
+	loadSite,
+	loadSiteEvaluation,
+	loadGeolocation,
+	selectLocationToEvaluate,
+	collection,
+	jsonOut;
+	
+$(document).ready(function () {
+	
+	// bind actions to controls to hide or show items in div: 
+	$("#garden").hide();
+
+	$("#mainMenu").change(function () {
+		var value = $(this).val();
+
+		if (value !== "1") {
+			$("#garden").hide();
+		} else {
+			$("#garden").show();
+		}
+
+	});
+
+	// clear all form elements: TODO need a better method!!!
+	$(function () {
+		$('#res').bind('click', function () {
+			$('#locationForm')[0].reset();
+			$("input[type='checkbox']").attr("checked", false).checkboxradio("refresh");
+		});
+	});
+	
+	// TODO - need to change to a class for brevity
+	$('#btn-reset').live('click',
+		function () {
+		
+			var myselect = $("select#useOfColor"); // TODO: use class to simplify code
+
+			myselect[0].selectedIndex = 0;
+			myselect.selectmenu("refresh");
+
+			myselect = $("select#plantVariety");
+			myselect[0].selectedIndex = 0;
+			myselect.selectmenu("refresh");
+
+			myselect = $("select#design");
+			myselect[0].selectedIndex = 0;
+			myselect.selectmenu("refresh");
+
+			myselect = $("select#maintenance");
+			myselect[0].selectedIndex = 0;
+			myselect.selectmenu("refresh");
+
+			myselect = $("select#environmentalStewardship");
+			myselect[0].selectedIndex = 0;
+			myselect.selectmenu("refresh");
+
+			myselect = $("select#featuresMenu");
+			myselect[0].selectedIndex = 0;
+			myselect.selectmenu("refresh");
+
+			$("input[type='checkbox']").attr("checked", false).checkboxradio("refresh");
+			$("#generalComment").val('');
+			$("#sumRating").val('');
+
+		});
+
+	$('#myElement').live('click', function () {
+		alert($(this).data('id'));
+	});
+
+});
+
+$(function () {
+	$('#btn').bind('click', function () {
+		var myselect = $("select#awardMenu"); // TODO: use class to simplify code
+		myselect[0].selectedIndex = 0;
+		myselect.selectmenu("refresh");
+
+		$("#specialAward").val('');
+	});
+});
+
+
+// utilize for binding form event id from selected menu item: listen for event and write out selected value to session storage
+$('div:jqmData(id="selectLocationToEvaluate")').live('pagebeforeshow', function (e) {
+	$(this).find('#selectLocationToEvaluateForm').on('submit', function () {
+		var key = $(this).data("id");
+		sessionStorage.ParameterID = key;
+		return true;
+	});
+     
+	console.log('Parameter ID: ' + sessionStorage.ParameterID);
+    
+});
+
+
+// when loading this element retrieve value of ID from Session Storage: this
+// will allow for use in data linking
+$('#location').live('pageshow', function (event, ui) {
+	
+	console.log('Parameter ID: ' + sessionStorage.ParameterID);
+
+	loadSiteEvaluation(sessionStorage.ParameterID);
+
+	// console.log('Selection of location yields:' +
+	// SelectValues(sessionStorage.ParameterID));
+});
+
+$('#dataToRemote').live('pageshow', function (event, ui) {
+	console.log('Parameter ID: ' + sessionStorage.ParameterID);
+
+	var toPost = true; // use for posting object to web server
+
+	assembleDataToPost(sessionStorage.ParameterID, toPost);
+
+	// console.log('Selection of location yields:' +
+	// SelectValues(sessionStorage.ParameterID));
+});
+
+$('#viewEvaluation').live('pageshow', function (event, ui) {
+
+	var id = sessionStorage.ParameterID,
+		toPost = false; // use for test output of object
+	
+	console.log('Parameter ID: ' + sessionStorage.ParameterID);
+
+	// view object to be posted
+	assembleDataToPost(sessionStorage.ParameterID, toPost);
+
+	// view all stored data on device
+	loadEvaluation(id);
+	loadSite(id);
+	loadEvaluationAward(id);
+	loadEvaluationFactor(id);
+	loadEvaluationFeature(id);
+	loadGardener(id);
+	loadGeolocation(id);
+
+	// console.log('Selection of location yields:' +
+	// SelectValues(sessionStorage.ParameterID));
+});
+
+// compute sum of ratings: TODO - add other categories
+function computeScore() {
+	var	useOfColor = $("#useOfColor").val(),
+		plantVariety = $("#plantVariety").val(),
+		design = $("#design").val(),
+		maintenance = $("#maintenance").val(),
+		environmentalStewardship = $("#environmentalStewardship").val(),
+		sum;
+	
+	// force to be a number and then check if indeed it really is
+	if (!isNaN(parseInt(useOfColor, 10)) 
+			&& !isNaN(parseInt(plantVariety, 10)) 
+			&& !isNaN(parseInt(design, 10)) 
+			&& !isNaN(parseInt(maintenance, 10)) 
+			&& !isNaN(parseInt(environmentalStewardship, 10))) {
+		
+		sum = parseInt(useOfColor, 10) 
+			+ parseInt(plantVariety, 10) 
+			+ parseInt(design, 10) 
+			+ parseInt(maintenance, 10) 
+			+ parseInt(environmentalStewardship, 10);
+
+		// alert("sum:" + parseInt(sum));
+
+		$("#sumRating").val(sum);
+		$("#sumRating").attr('disabled', 'disabled');
+
+		// based on threshold value control visibility of award page via div
+		// encapsulating a href : this would be ideal, however, since rules are
+		// too convoluted, we just issue an alert!
+
+		if (sum < 18 && !isNaN(parseInt(sum, 10))) {
+			// $(".hide_me").show();
+			alert("This garden should only be considered for best boulevard or container garden, since they are not an EG!");
+		} 
+			// else { $(".hide_me").hide(); }
+
+	} else {
+		alert("Please enter a rating!");
+	}
+}
+
+// db stuffs
+
+//Wait for PhoneGap to load
+//document.addEventListener("deviceready", onDeviceReady, false);
 
 // this is called when an error happens in a transaction
 function errorHandler(error) {
@@ -75,8 +267,8 @@ function executeSql(sqlStatement) {
 
 // called when the application loads
 function onBodyLoad() {
-	alert("DEBUGGING: we are in the onBodyload() function");
-
+	//alert("DEBUGGING: we are in the onBodyload() function");
+	
 	if (!window.openDatabase) {
 		// not all mobile devices support databases if it does not, the
 		// following alert will display indicating the device
@@ -86,18 +278,19 @@ function onBodyLoad() {
 	}
 
 	db = openDatabase(shortName, version, displayName, maxSize);
-
+	
 	// drop tables
 
 	/*
 	 * var dropStatementGeolocation = 'DROP TABLE geo_location',
-	 * dropStatementSite = 'DROP TABLE site', dropStatementSiteType = 'DROP
-	 * TABLE site_type';, dropStatementEvaluation = 'DROP TABLE evaluation'
+	 * dropStatementSite = 'DROP TABLE site', 
+	 * dropStatementSiteType = 'DROP TABLE site_type';, 
+	 * dropStatementEvaluation = 'DROP TABLE evaluation'
 	 * dropStatementEvaluationAward = 'DROP TABLE evaluation_award',
 	 * dropStatementEvaluationFactor = 'DROP TABLE evaluation_factor',
 	 * dropStatementEvaluationFeature = 'DROP TABLE evaluation_feature',
-	 * dropStatementFeature = 'DROP TABLE feature', dropStatementAward = 'DROP
-	 * TABLE award', dropStatementFactor = 'DROP TABLE factor',
+	 * dropStatementFeature = 'DROP TABLE feature', 
+	 * dropStatementAward = 'DROP TABLE award', dropStatementFactor = 'DROP TABLE factor',
 	 * dropStatementGardener = 'DROP TABLE gardener';
 	 * 
 	 * executeSql(dropStatementGeolocation); executeSql(dropStatementSite);
@@ -190,66 +383,70 @@ function onBodyLoad() {
 	executeSql(createStatementAward);
 	executeSql(createStatementFeature);
 	executeSql(createStatementFactor);
+	
 }
 
 // list the values in the database to the screen using jquery to update the
 // #lbGarden element
-function selectLocationToEvaluate() {
-	if (!window.openDatabase) {
-		alert('Databases are not supported in this browser.');
-		return;
-	}
-	// this line clears out any content in the #lbLocation element on the page
-	// so
-	// that the next few lines will show updated
-	// content and not just keep repeating lines
-
+var selectLocationToEvaluate = function () {
+	
 	var SelectStatement = 'SELECT * FROM site s  '
-			+ 'INNER JOIN evaluation e ON s.site_id = e.site_id';
+			+ 'INNER JOIN evaluation e ON s.site_id = e.site_id '
+			+ 'ORDER BY s.site_id';
 
-	$('#lbLocation').html('');
+	alert('Hi!');
+	
+	//$('#lbLocation').html('');
 	// this next section will select all the content from the site table and
-	// then go through it row by row
-	// appending the to the #lbLocation element on the page
-
+	// then go through it row by row assembling a collection
+	
 	db.transaction(function (transaction) {
 		transaction.executeSql(SelectStatement, [], function (transaction, result) {
 			if (result !== null && result.rows !== null) {
 				var	i  = 0,
 					max,
 					row,
-					location;
+					location,
+					jsonToEvaluate = []; // initialize as a collection 
+				
 				for (i = 0, max = result.rows.length;  i < max; i += 1) {
 					row = result.rows.item(i);
 					location = row.address 
 						+ ' ' + row.city 
 						+ ' ' + row.state 
 						+ ' ' + row.zip;
-
-					/*
-					 * A nice way to do it, but this blobs together everything
-					 * into one long string: var a = $('<a />' + ' ' + n');
-					 * a.attr('href','#mainPage'); a.text(location);
-					 * a.attr('id', 'h' + row.id); $('#lbLocation').append(a);
-					 */
-
-					// create dynamic url: on click, write evaluation_id to
-					// LocalStorage for retrieval of and use for later
-					$('#lbLocation').append('<a href="#location" font size="7" onclick="sessionStorage.ParameterID='
-						+ row.evaluation_id 
-						+ '" >' 
-						+ location
-						+ '  </a><br>');
-
-					// on page show for #location, we grab the id stored in
-					// SessionStorage and pass it for linking
+					
+					jsonToEvaluate[i] = {
+						id: row.evaluation_id,
+						category: "toEvaluate",
+						location: location
+					};
+					
+					if (i + 1 === max) {
+						jsonOut(jsonToEvaluate);
+					}
+					
 				}
-
 			}
 		}, errorHandler);
 	}, errorHandler, nullHandler);
 	return;
-}
+};
+
+// test underscore template
+// return  json object 
+var  jsonOut = function (json) { 
+	
+	//console.log("In:" + json); 
+
+	var template = $("#usageList").html();
+	$("#target").html(_.template(template, {json: json}));
+	//return json;
+	
+};
+
+
+
 
 // load site data for use in page div
 function loadSiteEvaluation(id) {
@@ -827,8 +1024,6 @@ function insertGeolocationToDb(latitude, longitude, accuracy, timeStamp, siteId)
 // thus, there are no guarantees that the variable will capture any data, hence we select async: false 
 // and use a deferred object to grab the state after it has been returned
 var getJson = function () { // TODO: get evaluator_id
-
-	// TODO: use
 	
 	var	url,
 		json,
@@ -1001,16 +1196,6 @@ function selectEvaluationToPost() {
 						+ row.zip
 						+ ' date posted to remote'
 						+ row.date_posted_to_remote;
-
-					/*
-					 A nice way to do it, but this blobs together everything into one long string: 
-					 var a = $('<a/>' + ' ' + n');
-					  a.attr('href','#mainPage');
-					  a.text(location);
-					  a.attr('id', 'h' +
-					  row.id);
-					  $('#lbLocation').append(a);
-					 */
 
 					// create dynamic url: on	click, write evaluation_id to LocalStorage for retrieval of and use for later
 					$('#lbUploadEvaluation').append('<a href="#dataToRemote" font size="7" onclick="sessionStorage.ParameterID=' 
@@ -1199,7 +1384,8 @@ function assembleDataToPost(id, toPost) {
 							},
 						};
 
-						encoded = $.toJSON(obj);
+						//encoded = $.toJSON(obj);
+						encoded = obj;
 						alert("data" + encoded);
 						addFactorRating(encoded, obj, id, toPost);
 						console.log('Session evaluation_id onward to POST!!!');
@@ -1261,11 +1447,11 @@ function addFactorRating(encoded, obj, id, toPost) {
 
 					if (i === 4) {
 
-						console.log(' ' + $.toJSON(obj));
-						alert('encoded' + $.toJSON(obj));
+						//console.log(' ' + $.toJSON(obj));
+						//alert('encoded' + $.toJSON(obj));
 
 						if (toPost) {
-							sendJson(obj, id);
+							postToRemote(obj, id);
 						}
 					}
 				}
@@ -1275,7 +1461,7 @@ function addFactorRating(encoded, obj, id, toPost) {
 	return;
 }
 
-function sendJson(obj, id) {
+function postToRemote(obj, id) {
 	
 	// set up url
 	
@@ -1306,23 +1492,66 @@ function sendJson(obj, id) {
 			url = url + '/' + showResults;
 		}
 	}
-	
 	console.log('new url: ' + url);
 
-	$.ajax({
-		type : "POST",
-		url : url,
-		data : obj,
-		success : function (data, textStatus, jqXHR) {
-			console.log('success' + textStatus + jqXHR.responseText);
-			alert(textStatus + jqXHR.responseText);
-			updateWhenPosted(id);
-		},
-		error : function () {
-			console.log('failure');
-		}
-	});
+	// if select-image checked on form call select- image: need to redesign #selectLocationToEvaluate in HTML form
+	if ($("#get-image").is(":checked")) {
+		selectImage(obj, id, url);
+	} else {
+	
+	    $.ajax({
+		    type : "POST",
+		    url : url,
+		    data : obj,
+		    success : function (data, textStatus, jqXHR) {
+			    console.log('success' + textStatus + jqXHR.responseText);
+			    alert(textStatus + jqXHR.responseText);
+			    updateWhenPosted(id);
+		    },
+		    error : function () {
+			    console.log('failure');
+		    }
+	    }); 
+	}
+	
+}
 
+function selectImage(obj, id, url) {
+    // Retrieve image file location from specified source
+    navigator.camera.getPicture(postWithImage, function (message) {
+	    alert('get picture failed');
+    }, {
+	    quality: 50, 
+	    destinationType: navigator.camera.DestinationType.FILE_URI,
+	    sourceType: navigator.camera.PictureSourceType.PHOTOLIBRARY
+    }, obj, id, url
+        );
+
+}
+
+function postWithImage(imageURI, obj, id, url) {
+    var options = new FileUploadOptions(),
+        ft = new FileTransfer();
+    
+    options.fileKey = "file";
+    options.fileName = imageURI.substr(imageURI.lastIndexOf('/') + 1);
+    options.mimeType = "image/jpeg";
+    options.params = obj;
+    options.chunkedMode = false;
+
+    ft.upload(imageURI, url, postSuccess, postError, options);
+}
+
+function postSuccess(r) {
+    console.log("Code = " + r.responseCode);
+    console.log("Response = " + r.response);
+    console.log("Sent = " + r.bytesSent);
+    alert(r.response);
+    updateWhenPosted(id);
+}
+
+function postError(error) {
+    alert("An error has occurred: Code = " + error.code);
 }
 
 function updateWhenPosted(id) {
@@ -1674,4 +1903,48 @@ function loadGardener(id) {
 		}, errorHandler);
 	}, errorHandler, nullHandler);
 	return;
+}
+
+// geolocation 
+
+var watchID = navigator.geolocation.watchPosition(onSuccess, onError, {
+	frequency : 3000
+});
+
+function onDeviceReady() {
+
+	//navigator.geolocation.getCurrentPosition(onSuccess, onError);
+	// needed for Android 2.x
+	navigator.geolocation.getCurrentPosition(onSuccess, onError, { maximumAge: 3000, timeout: 5000, enableHighAccuracy: true });
+}
+
+// onSuccess Geolocation
+function onSuccess(position) {
+	var element = document.getElementById('geolocation'),
+		timeStamp = new Date(position.timestamp),
+		latitude = position.coords.latitude, 
+		longitude = position.coords.longitude,
+		accuracy = position.coords.accuracy;
+
+
+	element.innerHTML = 'Latitude: ' + position.coords.latitude + '<br />'
+		+ 'Longitude: ' + position.coords.longitude + '<br />'
+		+ 'Altitude: ' + position.coords.altitude + '<br />' 
+		+ 'Accuracy: ' + position.coords.accuracy + '<br />'
+		+ 'Timestamp: ' + new Date(position.timestamp) + '<br />';
+	
+	
+	// initialize
+	localStorage.clear();
+	// add data to localStorage 
+	localStorage.latitude = latitude;
+	localStorage.longitude = longitude;
+	localStorage.accuracy = accuracy;
+	localStorage.timeStamp = timeStamp;
+
+}
+
+// onError Callback receives a PositionError object
+function onError(error) {
+	alert('code: ' + error.code + '\n' + 'message: ' + error.message + '\n');
 }

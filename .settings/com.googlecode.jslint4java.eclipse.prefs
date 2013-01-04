@@ -1,0 +1,14 @@
+Exclude=cordova,jquery,date,index.html,evaluate.it.db.1.js,lodash.js,backbone.js,require.js,mobileRouter.js,CategoriesCollection.js,CategoryView.js,CategoryModel.js
+bitwise=true
+devel=true
+eclipse.preferences.version=1
+es5=true
+maxerr=120
+newcap=true
+nomen=true
+nonew=true
+onevar=true
+plusplus=true
+regexp=true
+varsattop=true
+white=true
