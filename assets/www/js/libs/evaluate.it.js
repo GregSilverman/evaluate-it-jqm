@@ -439,8 +439,8 @@ var  jsonOut = function (json) {
 	
 	//console.log("In:" + json); 
 
-	var template = $("#usageList").html();
-	$("#target").html(_.template(template, {json: json}));
+	var template = $("#categoryItems").html();
+	$("#evaluations").html(_.template(template, {json: json}));
 	//return json;
 	
 };

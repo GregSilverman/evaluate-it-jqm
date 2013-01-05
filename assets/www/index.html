@@ -76,7 +76,7 @@
                                 <option value="3"> Rain Garden Inspection</option>
                             </select>
                             <a href="#testDb" data-role="button" data-inline="true" data-theme="a" value="submit-value" >Data management</a>
-                            <a href="#testMe" data-role="button" data-inline="true" data-theme="a" value="submit-value" onClick="selectLocationToEvaluate()">Select Garden to Evaluate</a>
+                            <a href="#evaluations" data-role="button" data-inline="true" data-theme="a" value="submit-value" onClick="selectLocationToEvaluate()">Select Garden to Evaluate</a>
                         </div>
                     </fieldset>
                 </div>
@@ -112,13 +112,11 @@
             </form>
         </div>
 
-        <!-- form div for selection of evaluation location -->
+        <!-- form div for selection of evaluation location - ELIMINATE THIS!!-->
         <div data-role="page" data-theme="e" id="selectLocationToEvaluate">
             <form  id="selectLocationToEvaluateForm" >
                 <div data-role="content">
                     <div data-role="fieldcontain">
-
-                        <!-- print out all sites assigned to evaluator -->
                         <div id="lbLocation"></div>
                         <a href="#mainPage" class="submit" type="submit" data-role="button" data-inline="true"  data-theme="a">Return to Main</a>
                     </div>
@@ -127,20 +125,39 @@
         </div>
 
         <!-- underscore template test -->
-        <div id="target"></div>
+        
+        <div id="evaluations" data-role="page" data-title="Evaluations">
 
-        <script type="text/html" id='usageList'>
+            <div data-role="header">
+                <h1>Site to evaluate</h1>
+            </div><!-- /header -->
 
-            <% _.each(json,function(item,key,list){ %>
-            <% var f = item.location, g = item.category; %><!-- create more variables -->
+            <div data-role="content">
+                <ul data-role="listview" data-inset="true"></ul>
+            </div><!-- /content -->
 
-            <!-- use variables -->
+        </div>
 
-            <li data-id="<%= key %>" class="ui-li ui-li-static ui-btn-up-c ui-corner-top">
+         <div id="evaluations" data-role="page" data-title="Evaluations">
 
-            <%= item.category %>
-            <%= item.location %>
+            <div data-role="header">
+                <h1>Upload completed evaluation</h1>
+            </div><!-- /header -->
 
+            <div data-role="content">
+                <ul data-role="listview" data-inset="true"></ul>
+            </div><!-- /content -->
+
+        </div>
+        
+        <!-- Underscore Template that is used to display all of the Category Models -->
+        <script id="categoryItems" type="text/template">
+
+            <% _.each(json,function(item,id) { %>
+
+                <li data-id="<%= id %>" class="ui-li ui-li-static ui-btn-up-c ui-corner-top">
+                <a href="#location" onclick="sessionStorage.ParameterID='<%=item.id %>'"> <%=item.id %> <%= item.location %>
+                
             </li>
 
             <% }); %>
