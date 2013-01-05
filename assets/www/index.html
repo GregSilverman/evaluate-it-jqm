@@ -76,7 +76,7 @@
                                 <option value="3"> Rain Garden Inspection</option>
                             </select>
                             <a href="#testDb" data-role="button" data-inline="true" data-theme="a" value="submit-value" >Data management</a>
-                            <a href="#evaluations" data-role="button" data-inline="true" data-theme="a" value="submit-value" onClick="selectLocationToEvaluate()">Select Garden to Evaluate</a>
+                            <a href="#evaluations" data-role="button" data-inline="true" data-theme="a" value="submit-value" onClick="selectLocation()">Select Location</a>
                         </div>
                     </fieldset>
                 </div>
@@ -138,17 +138,6 @@
 
         </div>
 
-         <div id="evaluations" data-role="page" data-title="Evaluations">
-
-            <div data-role="header">
-                <h1>Upload completed evaluation</h1>
-            </div><!-- /header -->
-
-            <div data-role="content">
-                <ul data-role="listview" data-inset="true"></ul>
-            </div><!-- /content -->
-
-        </div>
         
         <!-- Underscore Template that is used to display all of the Category Models -->
         <script id="categoryItems" type="text/template">
@@ -156,16 +145,15 @@
             <% _.each(json,function(item,id) { %>
 
                 <li data-id="<%= id %>" class="ui-li ui-li-static ui-btn-up-c ui-corner-top">
-                <a href="#location" onclick="sessionStorage.ParameterID='<%=item.id %>'"> <%=item.id %> <%= item.location %>
-                
-            </li>
+                    <a href="#<%=item.category %>" onclick="sessionStorage.ParameterID='<%=item.id %>'"> <%=item.category %><%= item.location %>
+                </li>
 
             <% }); %>
 
         </script>
 
         <!-- form div for site to evaluate -->
-        <div data-role="page" data-theme="e" id="location">
+        <div data-role="page" data-theme="e" id="toEvaluate">
             <form  id="locationForm" >
                 <div data-role="content">
 
