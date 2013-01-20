@@ -1,7 +1,5 @@
 // Sets the require.js configuration for your application.
 
-
-        
 require.config({
 	
 	// 3rd party script alias names (Easier to type "jquery" than "libs/jquery-1.8.2.min")
@@ -12,7 +10,7 @@ require.config({
 		"cordova": "libs/cordova-1.7.0rc1",
 		"underscore": "libs/lodash",
 		"backbone": "libs/backbone",
-		"jqueryjson": "libs/json3",
+		"jqueryjson": "libs/json2",
 		"backbonevalidate": "libs/Backbone.validateAll",//look at backbone.validate
 		"evaluateit": "libs/evaluate.it",
 		"evaluateitconfig": "libs/evaluate.it.config"
@@ -50,14 +48,20 @@ require.config({
 // Includes File Dependencies
 require([  "jquery",  "cordova", "jquerymobile",  "underscore", "evaluateit"], function () {
 
-//require(["jquery", "routers/mobileRouter",  "jquerymobile",  "evaluateit"], function ($, Backbone, Mobile) {
+//require(["jquery", "cordova",  "routers/mobileRouter", "jquerymobile",  "underscore", "evaluateit", "jqueryjson"], function ($, Backbone, Mobile) {
 	onBodyLoad();
 	
 	
+	selectLocation(function (test) {
+		console.log("DATA out:" + JSON.stringify(test));
+		testMe(JSON.stringify(test));
+	});
 	
-	//selectLocationToEvaluate();
-	//alert($().jquery);
-	//console.log($().jquery);
+	function testMe(test) {
+		test = "AAAA:::" + test;
+		console.log("DATA last:" + test);
+	}
+	
 	
 	
 	// Prevents all anchor click handling including the addition of active button state and alternate link blurring.

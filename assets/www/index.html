@@ -62,8 +62,7 @@
         </style>
     </head>
     <body>
-
-        <div data-role="page" id="mainPage" data-theme="e">
+<div data-role="page" id="mainPage" data-theme="e">
             <form  id="mainForm" >
                 <div data-role="content">
                     <img style="width: 288px; height: 100px" src="images/logo.gif" />
@@ -125,7 +124,7 @@
         </div>
 
         <!-- underscore template test -->
-        
+
         <div id="evaluations" data-role="page" data-title="Evaluations">
 
             <div data-role="header">
@@ -137,23 +136,21 @@
             </div><!-- /content -->
 
         </div>
-
         
         <!-- Underscore Template that is used to display all of the Category Models -->
         <script id="categoryItems" type="text/template">
 
             <% _.each(json,function(item,id) { %>
-
                 <li data-id="<%= id %>" class="ui-li ui-li-static ui-btn-up-c ui-corner-top">
-                    <a href="#<%=item.category %>" onclick="sessionStorage.ParameterID='<%=item.id %>'"> <%=item.category %><%= item.location %>
+                <a href="#<%=item.category %>" onclick="sessionStorage.ParameterID='<%=item.id %>'"> <%=item.category %><%= item.location %>
                 </li>
-
             <% }); %>
 
         </script>
 
+        <!-- TODO: convert to backbone form -->
         <!-- form div for site to evaluate -->
-        <div data-role="page" data-theme="e" id="toEvaluate">
+        <div data-role="page" data-theme="e" id="evaluationNotComplete">
             <form  id="locationForm" >
                 <div data-role="content">
 
@@ -252,6 +249,7 @@
             </form>
         </div>
 
+        <!-- TODO: convert to backbone form -->
         <!-- form div for ratings used in scoring -->
         <div data-role="page" data-theme="e" id="ratingsFeatures">
             <form  id="ratingsFeaturesForm" >
@@ -344,6 +342,7 @@
         <!-- form div for awards: control display  -->
         <div data-role="page" data-theme="e" id="award">
 
+        <!-- TODO: templatize this -->
             <form  id="awardForm" >
                 <div data-role="fieldcontain">
                     <label for="awardMenu"> <em>* </em>Consider this garden for: </label>
