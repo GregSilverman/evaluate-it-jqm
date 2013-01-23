@@ -1,103 +1,218 @@
-// DAO to override Backbone.sync  
-
+  
 // TODO:  CRUD on models: Site, SiteEvaluation, SiteEvaluationAward, SiteEvaluationFeature, SiteEvaluationScorecard, SiteEvaluationFeature
 
-// use cases:
-// create: load to device - Site, SiteEvaluation
-// load to remote: findAll where SiteEvaluation has been done or Site not exist
-// read: findAll where SiteEvaluation not done for completion of evaluation - Site, SiteEvaluation
-// create: EvaluationFactor, SiteMaintainer, EvaluationAward, EvaluationFeature, SiteGeolocation for new evaluation
-// read: findAll where SiteEvaluation done for update of evaluation - Site, SiteEvaluation
-// update: EvaluationFactor, SiteMaintainer, EvluationAward, EvaluationFeature, SiteGeolocation for already completed evaluation
-// read: findBy id in sessionStorage for page navigation - Site, SiteEvaluation
-// delete:  findBy id in sessionStorage for element deletion - Site, SiteEvaluation EvaluationFactor, SiteMaintainer, EvluationAward, EvaluationFeature, SiteGeolocation:
-// destroy: kill db
+// Use cases for evaluator interaction with app:
+// 
+// CREATE: load to device/Ajax GET from remote 
+// Write JSONP to SQLite tables, Site, SiteEvaluation -> TODO: override default Backbone.sync using model specific sync implementations
 
-// LOAD
+// loadDbSite(site_id, address, city, state, zip)
+var InsertStatement = 'INSERT INTO site (site_id,  ' 
+	+ 'site_type_id,  '
+	+ 'address,   ' 
+	+ 'city,   ' 
+	+ 'state,   ' 
+	+ 'zip)  '
+	+ 'VALUES (?,?,?,?,?,?)';
 
-var createStatementSite = 'CREATE TABLE IF NOT EXISTS site  '
-				+ '(id INTEGER NOT NULL PRIMARY KEY,  '
-				+ 'site_id INTEGER NOT NULL,  '
-				+ 'site_type_id INTEGER NOT NULL,  '
-				+ 'address VARCHAR NOT NULL,  ' 
-				+ 'city VARCHAR NOT NULL, '
-				+ 'state VARCHAR NOT NULL, ' 
-				+ 'zip INTEGER NOT NULL,  '
-				+ 'neighborhood VARCHAR)', 
+//  loadDbEvaluation(site_id, evaluator_id, evaluation_id)
+var InsertStatement = 'INSERT INTO evaluation (site_id,  '
+	+ 'evaluator_id,  ' 
+	+ 'evaluation_id, '
+	+ 'date_loaded_to_device) '
+	+ 'VALUES (?,?,?,?)';
 
-	createStatementSiteMaintainer = 'CREATE TABLE IF NOT EXISTS site_maintainer  '
-				+ '(id INTEGER NOT NULL PRIMARY KEY,  '
-				+ 'site_id INTEGER NOT NULL,  ' 
-				+ 'name VARCHAR NOT NULL)', 
-	
-	createStatementSiteGeolocation = 'CREATE TABLE IF NOT EXISTS site_geolocation  '
-				+ '(id INTEGER NOT NULL PRIMARY KEY,  '
-				+ 'site_id INTEGER NOT NULL,  ' 
-				+ 'latitude REAL NOT NULL,  '
-				+ 'longitude REAL NOT NULL,  ' 
-				+ 'accuracy VARCHAR NOT NULL, '
-				+ 'timestamp DATETIME)', 
-	
-	createStatementSiteEvaluation = 'CREATE TABLE IF NOT EXISTS site_evaluation  '
-				+ '(id INTEGER NOT NULL PRIMARY KEY ,  '
-				+ 'evaluation_id INTEGER NOT NULL, '
-				+ 'evaluator_id INTEGER NOT NULL ,  '
-				+ 'site_id INTEGER NOT NULL ,  ' 
-				+ 'sum_rating INTEGER,  '
-				+ 'date_loaded_to_device DATETIME,  '
-				+ 'no_longer_exists INTEGER,  ' 
-				+ 'comments TEXT,  '
-				+ 'date_posted_to_remote DATETIME,  '
-				+ ' date_entered_on_device_by_evaluator DATEIME,  '
-				+ 'date_of_evaluation DATETIME )', 
-	
-	createStatementSiteEvaluationFactor = 'CREATE TABLE IF NOT EXISTS site_evaluation_factor  '
-				+ '(id INTEGER PRIMARY KEY NOT NULL ,  '
-				+ 'factor_id INTEGER NOT NULL ,  '
-				+ 'rating INTEGER NOT NULL ,  '
-				+ 'evaluation_id INTEGER NOT NULL )', 
-				
-	createStatementSiteEvaluationAward = 'CREATE TABLE IF NOT EXISTS site_evaluation_award  '
-				+ '(id INTEGER PRIMARY KEY NOT NULL ,  '
-				+ 'award_id INTEGER NOT NULL ,  '
-				+ 'special_award_specified VARCHAR,  '
-				+ 'evaluation_id INTEGER NOT NULL )', 
-		
-	createStatementSiteEvaluationFeature = 'CREATE TABLE IF NOT EXISTS site_evaluation_feature  '
-				+ '(id INTEGER PRIMARY KEY NOT NULL ,  '
-				+ 'evaluation_id INTEGER NOT NULL ,  '
-				+ 'feature_id INTEGER NOT NULL) ';
-			
-executeSql(createStatementSite);
-executeSql(createStatementSiteMaintainer);
-executeSql(createStatementSiteGeolocation);
-executeSql(createStatementSiteEvaluation);
-executeSql(createStatementSiteEvaluationAward);
-executeSql(createStatementSiteEvaluationFactor);
-executeSql(createStatementSiteEvaluationFeature);
+// e.g., 
+/*test_collection: [
+	{"evaluation_id": "40380", // write to table evaluation 
+	  "completed": "1", // used to control whether object gets written to table; only write those that have not been completed (viz., "completed": 0)
+	  "eval_type": "regular", // n.a.
+	  "score": "15", // n.a
+	  "rating": "GD", // n.a
+	  "ratingyear": "2010", // n.a
+	  "bestof": "", // n.a
+	  "nateSiegelAward": "0", // n.a
+	  "rainbarrel": "0", // n.a
+	  "downspouts_redirected": "0", // n.a
+	  "date_assigned": "2010-07-15 12:55:14", // n.a
+	  "date_evaluated": "2010-08-22 18:25:28", // n.a
+	  "comments": "", // n.a
+	  "revisit": "", // n.a
+	  "evaluator": {"evaluator_id": "112", // write to evaluation
+		  "evaluator_notified": "1", // n.a
+		  "firstname": "Bob", // n.a
+		  "lastname": "Plant", // n.a
+		  "email": "rplant@zep.com"}, // n.a
+	 "garden": {"garden_id": "39094", // write to site_id in table site
+		 "name_of_garden": "",  // n.a
+		 "no_longer_exists": null,  // n.a
+		 "noteworthy_features": "", // n.a
+		 "uploaded_image": "",  // n.a
+		 "date_created": "", // n.a 
+		 "address": {"address": "113 W 32th St", // write nested address object to site
+			 "city": "MPLS", 
+			 "state": "MN",
+			 "zip": "55408",
+			 "neighborhood": "Lyndale",
+			 "county": "Hennepin"},
+		"gardener": {"name0": "Daphne K. Freaklet", // write to site (if new maintainer discovered during evaluation, then create new site_maintainer record)
+			"name2": "",
+			"name3": "",
+			"name4": "",
+			"email": "",
+			"phone": ""},
+		"features": {"business_garden": null, // n.a
+			"raingarden": null, 
+			"residential_garden": "1", 
+			"community_garden": "0", 
+			"church_garden": null,
+			"public_building": null, 
+			"apartment_or_condo": null,
+			"container_or_windowbox": null,
+			"downspouts_redirected": "0",
+			"has_rainbarrel": "0",
+			"not_publically_visible": null}
+			}
+	  }, 
+	  {"evaluation_id": "43864", 
+	  "completed": "0",
+	  "eval_type": "",
+	  "score":"0", 
+	  "rating": "",
+	  "ratingyear": "2012",
+	  "bestof": "",
+	  "nateSiegelAward": "0",
+	  "rainbarrel": "0",
+	  "downspouts_redirected":"0",
+	  "date_assigned": "2012-07-11 17:01:00",
+	  "date_evaluated": "0000-00-00 00:00:00",
+	  "comments": null,
+	  "revisit": "",
+	  "evaluator": {"evaluator_id": "112",
+		  "evaluator_notified": "1",
+		  "firstname": "Bob",
+		  "lastname": "Plant",
+		  "email":" rplant@zep.com"},
+		  "garden": {"garden_id": "39262",
+				"name_of_garden": "",
+				"no_longer_exists": null,
+				"noteworthy_features": "",
+				"uploaded_image": "",
+				"date_created": "",
+				"address": {"address": "4658 51th Ave. S.",
+					"city": "minneapolis",
+					"state": "MN",
+					"zip": "55406",
+					"neighborhood": "Longfellow",
+					"county": ""},
+				"gardener": {"name0":	"Polly Q. Pitchfork",
+					"name2":	"",	
+					"name3":	"",
+					"name4": "",
+					"email":	"",
+					"phone": ""},
+				"features": {"business_garden":	null,
+					"raingarden": null,
+					"residential_garden":	"1",
+					"community_garden": "0",
+					"church_garden": null,
+					"public_building": null,
+					"apartment_or_condo": null,
+					"container_or_windowbox": null,
+					"downspouts_redirected": "0", 
+					"has_rainbarrel": "0",
+					"not_publically_visible": null}
+				},
+			}
+	}] */
 
-// DESTROY - table
+// Load to remote: findAll where SiteEvaluation has been done or Site not exist -> TODO: use default backbone sync for REST API
+// SQLite queries; TODO: rewrite (ORDER BY and LIMIT were a kludge...):
 
-var dropStatementSiteGeolocation = 'DROP TABLE site_geolocation',
-	dropStatementSite = 'DROP TABLE site', 
-	dropStatementSiteEvaluation = 'DROP TABLE site_evaluation',
-	dropStatementSiteEvaluationAward = 'DROP TABLE site_evaluation_award',
-	dropStatementSiteEvaluationFactor = 'DROP TABLE site_evaluation_factor',
-	dropStatementSiteEvaluationFeature = 'DROP TABLE site_evaluation_feature',
-	dropStatementSiteMaintainer = 'DROP TABLE site_maintainer';
- 
-executeSql(dropStatementSiteGeolocation); executeSql(dropStatementSite);
-executeSql(dropStatementSite); executeSql(dropStatementEvaluation);
-executeSql(dropStatementSiteEvaluation);
-executeSql(dropStatementSiteEvaluationAward);
-executeSql(dropStatementSiteEvaluationFactor);
-executeSql(dropStatementSiteEvaluationFeature); 
-executeSql(dropStatementSiteMaintainer); 
+// These queries pull a selected evaluation that has been completed.
+// Data are assembled for remote POST (see function assembleDataToPost: TODO rewrite to utilize native Backbone.sync) 
+var selectStatement = 'SELECT * FROM evaluation e INNER JOIN site s  '
+	+ 'ON e.site_id = s.site_id LEFT OUTER JOIN  '
+	+ '(SELECT * FROM site_maintainer g INNER JOIN  '
+	+ 'evaluation e ON e.site_id = g.site_id   '
+	+ 'WHERE e.evaluation_id = ?  '
+	+ 'ORDER BY id Desc  '
+	+ 'LIMIT 1) AS g ON s.site_id  = g.site_id LEFT OUTER JOIN  '
+	+ '(SELECT * FROM evaluation_award ea INNER JOIN  '
+	+ 'evaluation e ON e.evaluation_id = ea.evaluation_id  '
+	+ 'WHERE e.evaluation_id = ?  '
+	+ 'ORDER BY id Desc  '
+	+ 'LIMIT 1) AS ea ON e.evaluation_id = ea.evaluation_id LEFT OUTER JOIN  '
+	+ '(SELECT * FROM evaluation_feature ef INNER JOIN  '
+	+ 'evaluation e ON e.evaluation_id = ef.evaluation_id   '
+	+ 'WHERE e.evaluation_id = ?  '
+	+ 'ORDER BY id Desc  '
+	+ 'LIMIT 1) AS efeature ON e.evaluation_id = efeature.evaluation_id LEFT OUTER JOIN  '
+	+ ' (SELECT * FROM geo_location gl INNER JOIN  '
+	+ 'evaluation e ON e.site_id = gl.site_id '
+	+ 'WHERE e.evaluation_id = ?  ' + 'ORDER BY id Desc  '
+	+ 'LIMIT 1) AS gl ON s.site_id  = gl.site_id  '
+	+ 'WHERE e.evaluation_id = ?  ' + 'ORDER BY id Desc  ' + 'LIMIT 1';
 
-// CREATE:
+// get individual score to append to JSON for POST; TODO: rewrite
+SelectStatement = 'SELECT * FROM evaluation_factor   '
+	+ 'WHERE evaluation_id = ?  ' + 'ORDER BY id Desc LIMIT 5';
+
+// e.g.,  assembled JSON to POST
+/*test: {"evaluation_id": 44214,
+	"score": 20, // computed, but stored value
+	"rating": "EG", // computed by range (see function assembleDataToPost)
+	"rating_year": 2012, // computed
+	"bestof": "Special", // from evaluation_award
+	"special_award_specified": "Absolute bestest ever!", // from evaluation_award; code stored. lookup via JSON object Award
+	"nate_siegel_award": 0, // from evaluation_award
+	"score_card": {"color": 4,  // from evaluation_factor, lookup via JSON object Factor
+		"plant_variety": 4,
+		"design": 4,
+		"maintenance": 4,
+		"environmental_stewardship": 4},
+	"date_evaluated":"2012-08-01", // entered
+	"general_comments":"This is a test", // evaluation
+	"evaluator": {"evaluator_id":"265", // evaluation; id from remote db
+		"completed_by": "265"},
+	"rainbarrel":1, //evaluation_factor; lookup via JSON object Factor
+	"raingarden":1,
+	"garden": {"garden_id": 39439, // remote id maps to site_id
+		"no_longer_exists": 0, // bit value
+		"address": {"neighborhood": "Lake Forest", 
+			"county": "Hennepin"},
+		"gardener": {"name":"Greg The Marvelous"}, // maps to site_maintainer
+		"geolocation": {"latitude": 44.9267,
+			"longitude": -93.405282,
+			"accuracy":"24000"}
+		}
+	} */
+
+// READ: findAll where SiteEvaluation not done for completion of evaluation - Site, SiteEvaluation -> override default Backbone.sync using model specific sync implementations
+// findAll where SiteEvaluation done for update of evaluation - Site, SiteEvaluation -> override default Backbone.sync using model specific sync implementations
+SelectStatement = 'SELECT * FROM site s  '
+	+ 'INNER JOIN evaluation e ON s.site_id = e.site_id '
+	+ 'ORDER BY s.site_id ';
+
+// from var selectLocation, to determine status of evaluation
+
+/* complete = row.date_entered_on_device_by_evaluator;
+	notExists = row.no_longer_exists;
+	if (complete || notExists) {
+		category = "evaluationComplete";
+	} else {
+		category = "evaluationNotComplete";
+	} */ 
+
+// category is used to control output of nested object site.address to select menu via Backbone template
+
+//READ: findBy id in sessionStorage for page navigation - Site, SiteEvaluation -> override default Backbone.sync using model specific sync implementations
+var	id = sessionStorage.ParameterID;
+
+// CREATE: EvaluationFactor, SiteMaintainer, EvaluationAward, EvaluationFeature, SiteGeolocation for new evaluation -> override default Backbone.sync using model specific sync implementations
 
 //insert gardener name: insertGardener(siteId, gardenerName)
-var insertStatement = 'INSERT INTO gardener   '
+var insertStatement = 'INSERT INTO site_maintainer   ' // was gardener
 	+ '(site_id, name)  VALUES (?,?)';
 
 // loadFactorToDb(value, label)
@@ -115,26 +230,141 @@ var insertStatement = 'INSERT INTO evaluation_award  '
 	+ 'VALUES (?,?,?)';
 
 //insertGeolocationToDb(latitude, longitude, accuracy, timeStamp, siteId)
-var insertStatement = 'INSERT INTO geo_location   '
+// first, write to localstorage onSuccess call in onDeviceReady
+
+/*
+// initialize
+localStorage.clear();
+// add data to localStorage 
+localStorage.latitude = latitude;
+localStorage.longitude = longitude;
+localStorage.accuracy = accuracy;
+localStorage.timeStamp = timeStamp;
+*/
+
+// then write to
+var insertStatement = 'INSERT INTO site_geolocation   '
 	+ '(site_id, latitude,longitude,accuracy,timestamp)  VALUES (?,?,?,?,?)';
 
-// loadDbSite(site_id, address, city, state, zip)
-var InsertStatement = 'INSERT INTO site(site_id,  ' 
-	+ 'site_type_id,  '
-	+ 'address,   ' 
-	+ 'city,   ' 
-	+ 'state,   ' 
-	+ 'zip)  '
-	+ 'VALUES (?,?,?,?,?,?)';
+// UPDATE: EvaluationFactor, SiteMaintainer, EvluationAward, EvaluationFeature, SiteGeolocation for already completed evaluation -> override default Backbone.sync using model specific sync implementations
+// TODO: need to create missing updates, since they do not exist in current version of app
+//updateHood(neighborhood)
+var updateStatement = 'UPDATE site   ' // get evaluation_id
+	+ 'SET neighborhood = ?  '
+	+ 'WHERE site_id IN (SELECT site_id FROM evaluation WHERE evaluation_id = ?)';
 
-//  loadDbEvaluation(site_id, evaluator_id, evaluation_id)
-var InsertStatement = 'INSERT INTO evaluation(site_id,  '
-	+ 'evaluator_id,  ' 
-	+ 'evaluation_id, '
-	+ 'date_loaded_to_device) VALUES (?,?,?,?)';
+// updateLocationPage()
+var updateStatement = 'UPDATE evaluation   '
+	+ 'SET date_of_evaluation = ?  ' 
+	+ 'WHERE evaluation_id = ?';
 
-// READ:
+// updateExistence()
+var updateStatement = 'UPDATE evaluation  ' 
+	+ 'SET no_longer_exists = 1 '
+	+ 'WHERE evaluation_id = ?';
 
+// updateEvaluationRatingComment(sumRating, generalComment)
+var updateStatement = 'UPDATE evaluation  ' 
+	+ 'SET sum_rating = ?,  '
+	+ 'comments = ?,  '
+	+ 'date_entered_on_device_by_evaluator  = ? '
+	+ 'WHERE evaluation_id = ?';
+
+// updateWhenPosted(id) 
+var updateStatement = 'UPDATE evaluation   '
+	+ 'SET date_posted_to_remote = ?  ' 
+	+ 'WHERE evaluation_id = ?';
+
+// DELETE:  findBy id in sessionStorage for element deletion - Site, SiteEvaluation EvaluationFactor, SiteMaintainer, EvluationAward, EvaluationFeature, SiteGeolocation:] -> override default Backbone.sync using model specific sync implementations
+// TODO: create queries, since they currently do not exist in app
+
+// LOAD to db
+
+var createStatementSite = 'CREATE TABLE IF NOT EXISTS site  '
+				+ '(id INTEGER NOT NULL PRIMARY KEY,  '
+				+ 'site_id INTEGER NOT NULL,  '
+				+ 'site_type_id INTEGER NOT NULL,  '
+				+ 'address VARCHAR NOT NULL,  ' 
+				+ 'city VARCHAR NOT NULL, '
+				+ 'state VARCHAR NOT NULL, ' 
+				+ 'zip INTEGER NOT NULL,  '
+				+ 'neighborhood VARCHAR)' 
+				+ 'county VARCHAR)',
+				
+	createStatementSiteMaintainer = 'CREATE TABLE IF NOT EXISTS site_maintainer  '
+				+ '(id INTEGER NOT NULL PRIMARY KEY,  '
+				+ 'site_id INTEGER NOT NULL,  ' 
+				+ 'name VARCHAR NOT NULL)', 
+	
+	createStatementSiteGeolocation = 'CREATE TABLE IF NOT EXISTS site_geolocation  '
+				+ '(id INTEGER NOT NULL PRIMARY KEY,  '
+				+ 'site_id INTEGER NOT NULL,  ' 
+				+ 'latitude REAL NOT NULL,  '
+				+ 'longitude REAL NOT NULL,  ' 
+				+ 'accuracy VARCHAR NOT NULL, '
+				+ 'timestamp DATETIME)', 
+	
+	createStatementSiteEvaluation = 'CREATE TABLE IF NOT EXISTS evaluation  '
+				+ '(id INTEGER NOT NULL PRIMARY KEY ,  '
+				+ 'evaluation_id INTEGER NOT NULL, '
+				+ 'evaluator_first_name VARCHAR NOT NULL ,  '
+				+ 'evaluator_last_name VARCHAR NOT NULL ,  '
+				+ 'evaluator_id INTEGER NOT NULL ,  '
+				+ 'site_id INTEGER NOT NULL ,  ' 
+				+ 'sum_rating INTEGER,  '
+				+ 'date_loaded_to_device DATETIME,  '
+				+ 'no_longer_exists INTEGER,  ' 
+				+ 'comments TEXT,  '
+				+ 'evaluation_type INTEGER NOT NULL,  '
+				+ 'date_posted_to_remote DATETIME,  '
+				+ 'date_entered_on_device_by_evaluator DATETIME,  '
+				+ 'date_loaded_to_device_by_evaluator DATEIME,  '
+				+ 'date_of_evaluation DATETIME )', 
+			
+	createStatementSiteEvaluationFactor = 'CREATE TABLE IF NOT EXISTS evaluation_factor  '
+				+ '(id INTEGER PRIMARY KEY NOT NULL ,  '
+				+ 'factor_id INTEGER NOT NULL ,  '
+				+ 'rating INTEGER NOT NULL ,  '
+				+ 'evaluation_id INTEGER NOT NULL )', 
+				
+	createStatementSiteEvaluationAward = 'CREATE TABLE IF NOT EXISTS evaluation_award  '
+				+ '(id INTEGER PRIMARY KEY NOT NULL ,  '
+				+ 'award_id INTEGER NOT NULL ,  '
+				+ 'special_award_specified VARCHAR,  '
+				+ 'evaluation_id INTEGER NOT NULL )', 
+		
+	createStatementSiteEvaluationFeature = 'CREATE TABLE IF NOT EXISTS evaluation_feature  '
+				+ '(id INTEGER PRIMARY KEY NOT NULL ,  '
+				+ 'evaluation_id INTEGER NOT NULL ,  '
+				+ 'feature_id INTEGER NOT NULL) ';
+			
+executeSql(createStatementSite);
+executeSql(createStatementSiteMaintainer);
+executeSql(createStatementSiteGeolocation);
+executeSql(createStatementEvaluation);
+executeSql(createStatementEvaluationAward);
+executeSql(createStatementEvaluationFactor);
+executeSql(createStatementEvaluationFeature);
+
+// DESTROY: kill db -> override default Backbone.sync using model specific sync implementations
+
+var dropStatementSiteGeolocation = 'DROP TABLE site_geolocation',
+	dropStatementSite = 'DROP TABLE site', 
+	dropStatementSiteEvaluation = 'DROP TABLE evaluation',
+	dropStatementSiteEvaluationAward = 'DROP TABLE evaluation_award',
+	dropStatementSiteEvaluationFactor = 'DROP TABLE evaluation_factor',
+	dropStatementSiteEvaluationFeature = 'DROP TABLE evaluation_feature',
+	dropStatementSiteMaintainer = 'DROP TABLE site_maintainer';
+ 
+executeSql(dropStatementSiteGeolocation); executeSql(dropStatementSite);
+executeSql(dropStatementSite); executeSql(dropStatementEvaluation);
+executeSql(dropStatementEvaluation);
+executeSql(dropStatementEvaluationAward);
+executeSql(dropStatementEvaluationFactor);
+executeSql(dropStatementEvaluationFeature); 
+executeSql(dropStatementSiteMaintainer); 
+
+// LIST: 
 // loadEvaluation(id) 
 var selectStatement = 'SELECT * FROM evaluation e  '
 	+ 'WHERE e.evaluation_id = ?';
@@ -165,51 +395,14 @@ var selectStatement = 'SELECT g.id, g.site_id, g.latitude, g.longitude, g.accura
 
 // loadGardener(id)
 var selectStatement = 'SELECT g.id, g.name, g.site_id, e.evaluation_id  '
-	+ 'FROM gardener g INNER JOIN  '
+	+ 'FROM site_maintainer g INNER JOIN  '
 	+ 'site s ON s.site_id = g.site_id INNER JOIN  '
 	+ 'evaluation e ON s.site_id = e.site_id  '
 	+ 'WHERE e.evaluation_id = ?  '
 	+ 'GROUP BY g.id, g.name, g.site_id, e.evaluation_id ';
 
-// UPDATE:
 
-// updateHood(neighborhood)
-var updateStatement = 'UPDATE site   ' // get evaluation_id
-	+ 'SET neighborhood = ?  '
-	+ 'WHERE site_id IN (SELECT site_id FROM evaluation WHERE evaluation_id = ?)';
-
-// updateLocationPage()
-var updateStatement = 'UPDATE evaluation   '
-	+ 'SET date_of_evaluation = ?  ' 
-	+ 'WHERE evaluation_id = ?';
-
-// updateExistence()
-var updateStatement = 'UPDATE evaluation  ' 
-	+ 'SET no_longer_exists = 1 '
-	+ 'WHERE evaluation_id = ?';
-
-// updateEvaluationRatingComment(sumRating, generalComment)
-var updateStatement = 'UPDATE evaluation  ' 
-	+ 'SET sum_rating = ?,  '
-	+ 'comments = ?,  '
-	+ 'date_entered_on_device_by_evaluator  = ? '
-	+ 'WHERE evaluation_id = ?';
-
-var updateStatement = 'UPDATE evaluation  ' 
-	+ 'SET sum_rating = ?,  '
-	+ 'date_entered_on_device_by_evaluator  = ? '
-	+ 'WHERE evaluation_id = ?';
-
-// updateWhenPosted(id) 
-var updateStatement = 'UPDATE evaluation   '
-	+ 'SET date_posted_to_remote = ?  ' 
-	+ 'WHERE evaluation_id = ?';
-
-// DELETE???
-
-// end DAO
-
-// backbone-relational model
+// backbone-relational models to implement
 var SiteEvaluation,
 	EvaluationFeature,
 	EvaluationAward,
@@ -220,7 +413,7 @@ var SiteEvaluation,
 Site = Backbone.AssociatedModel.extend({
 	default: {
 		id: '_id',
-		remoteSiteId: '', // key to match remote db site
+		remoteSiteId: '', // key to match remote db site (site_id)
 	    address: {
 			streetAddress: '',
 			city: '',
@@ -234,19 +427,35 @@ Site = Backbone.AssociatedModel.extend({
 			longitude: '',
 			accuracy: '',
 			timestamp: ''
-		},
-		maintainer: [{ // gardener, if known
-			name: ''
-		}],
+		}
 	},
-	relations: [{
-		relatedModel: SiteEvaluation,
-        type: Backbone.HasMany,
-        key: 'Evaluation.id',
-        reverseRelation: {
-            key: 'SiteEvaluation.id',
-        }
-    }]
+	relations: [
+		{
+			relatedModel: SiteEvaluation,
+			type: Backbone.HasMany,
+			key: 'evaluation.id',
+			reverseRelation: {
+				key: 'siteEvaluation.id',
+			},
+		},
+		{
+			relatedModel: SiteMaintainer,
+		    type: Backbone.HasMany,
+		    key: 'siteMaintainer.id',
+		    reverseRelation: {
+		        key: 'siteEvaluation.id',
+		    }
+		}],
+    sync: function (method, model, options) {} // add CRUD operations here, based on use cases 
+});
+
+//each evaluation may have zero or many known maintainers (was gardener)
+SiteMaintainer = Backbone.AssociatedModel.extend({
+	default: {
+		id: '_id',
+		name: ''
+	},
+    sync: function (method, model, options) {} // add CRUD operations here, based on use cases
 });
 
 //each evaluation will have a score associated with an assessment factor. this collection is the scorecard for the evaluation
@@ -255,7 +464,8 @@ EvaluationFactorScorecard = Backbone.AssociatedModel.extend({
 		id: '_id',
 		score: '',
 		factorType: '' // link to Factor.id
-	}
+	},
+    sync: function (method, model, options) {} // add CRUD operations here, based on use cases
 });
 
 EvaluationAward = Backbone.AssociatedModel.extend({
@@ -263,20 +473,22 @@ EvaluationAward = Backbone.AssociatedModel.extend({
 		id: '_id',
 		specialAwardSpecified: '',
 		awardType: '' // link to Award.id
-	}
+	},
+    sync: function (method, model, options) {} // add CRUD operations here, based on use cases
 });
 
 EvaluationFeature = Backbone.AssociatedModel.extend({
 	default: {
 		id: '_id',
 		featureType: '' // link to Feature.id
-	}
+	},
+    sync: function (method, model, options) {} // add CRUD operations here, based on use cases
 });
 
-SiteEvaluation = Backbone.AssociatedModel.extend({
+Evaluation = Backbone.AssociatedModel.extend({
 	default: {
 		id: '_id',
-		remoteEvaluationId: '', // key to match remote db site
+		remoteEvaluationId: '', // key to match remote db site (evaluation_id)
 		sumRating: '', // total score for evaluation factors - should equal sum of ratings over scorecard
 		dateLoadedToDevice: '', // when loaded from remote
 		datePostedToRemote: '', // when posted to remote
@@ -316,17 +528,18 @@ SiteEvaluation = Backbone.AssociatedModel.extend({
 	        }
 		},  
     ],
+    sync: function (method, model, options) {} // add CRUD operations here, based on use cases
 });
 
 // lookup data
-var evaluationType = 
+var EvaluationType = 
 	[
 	    { id: 1, description: 'First round garden' },
 		{ id: 2, description: 'Second round garden' },
 		{ id: 3, description: 'Voluntary rain garden' }
 	];
 
-var factor = 
+var Factor = 
 	[ 
 		{ id: 1, description: 'color' },
 		{ id: 2, description: 'plant variety' },
@@ -336,7 +549,7 @@ var factor =
 	];
 
 // nominate for an award: garden should only be considered for best boulevard or container garden if sum of scorecard is less than 18
-var award = 
+var Award = 
 	[
 		{ id: 1, description: 'Residential' },
 		{ id: 2, description: 'Residential Raingarden' },
@@ -353,44 +566,11 @@ var award =
 		{ id: 13, description: 'Specify' }
 	];
 	
-var feature = 
+// key features reflective of good environmental stewardship; values may change 
+var Feature = 
 	[
 		{ id: 1, description: 'rain barrel'},
 		{ id: 2, description: 'redirected downspouts'},
 		{ id: 3, description: 'rain garden'}
 	];	
 
-// override Backbone.sync
-Backbone.sync = function (method, model, options) {
-	
-	var dao = new model.dao(window.db);
-	
-	switch (method) {
-	case 'read':
-		if (model.id) {
-            dao.find(model, function (data) {
-                options.success(data);
-            });
-        } else {
-            dao.findAll(function (data) {
-                options.success(data);
-            });
-        }
-        break;
-    case 'create':
-        dao.create(model, function (data) {
-            options.success(data);
-        });
-        break;
-    case 'update':
-        dao.update(model, function (data) {
-            options.success(data);
-        });
-        break;
-    case 'delete':
-        dao.destroy(model, function (data) {
-            options.success(data);
-        });
-        break;
-    }
-};
