@@ -20,15 +20,15 @@ Data Mappings:
 
 Process:
 -----------
-* Record above items
+* Record above items under Data Mappings on to form
 * For Factor, rate each item using scale "Ratings for each factor"
-* Sum total ratings
-* If sum of total ratings is an Exceptional Garden (>= 18 total points), then you may consider the garden for any award; there are the following stipulations:
+* Sum total ratings across all Factors (write in "Total Score")
+* If sum of total ratings is an Exceptional Garden (see key under "Check award for total score;" EG has total score >= 18 total points), then you may consider the garden for any award; there are the following stipulations:
 
-1. Best boulevard or Best container garden can be awarded to any garden
-2. Only one award can be given to a Garden
+1. "Best boulevard" or "Best container garden" can be awarded to any garden
+2. Only one award can be given to a garden being evaluated
 3. Use of "Special Garden" must state the type of garden award (e.g., "Best sustainable school produce garden")
 
 Future:
 --------
-This form is being modified to utlize for rain garden evaluations. The Factors will be slightly modified and there will be more Faetures to choose from.
+This form is being modified to utlize for rain garden evaluations. The Factors will be slightly modified and there will be more Faetures from which to choose.
