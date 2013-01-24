@@ -20,7 +20,7 @@ Data Mappings:
 
 Process:
 -----------
-* Record above item
+* Record above items
 * For Factor, rate each item using scale "Ratings for each factor"
 * Sum total ratings
 * If sum of total ratings is an Exceptional Garden (>= 18 total points), then you may consider the garden for any award; there are the following stipulations:
