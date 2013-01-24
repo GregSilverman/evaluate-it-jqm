@@ -1,12 +1,15 @@
   
-// TODO:  CRUD on models: Site, SiteEvaluation, SiteEvaluationAward, SiteEvaluationFeature, SiteEvaluationScorecard, SiteEvaluationFeature
+// TODO:  CRUD on Backbone relational models: Site, SiteEvaluation, SiteEvaluationAward, SiteEvaluationFeature, SiteEvaluationScorecard, SiteEvaluationFeature
+// these are implemented as part of the model by overriding the default Backbone.sync method
 
 // Use cases for evaluator interaction with app:
 // 
-// CREATE: load to device/Ajax GET from remote 
-// Write JSONP to SQLite tables, Site, SiteEvaluation -> TODO: override default Backbone.sync using model specific sync implementations
+// CREATE: 
 
-// loadDbSite(site_id, address, city, state, zip)
+// case: load to device/Ajax GET from remote 
+// process: Ajax GET of JSONP from remote parsed to Webkit DB tables, Site, SiteEvaluation -> TODO: override default Backbone.sync using model specific sync implementations
+
+// from fn: loadDbSite(site_id, address, city, state, zip)
 var InsertStatement = 'INSERT INTO site (site_id,  ' 
 	+ 'site_type_id,  '
 	+ 'address,   ' 
@@ -15,14 +18,15 @@ var InsertStatement = 'INSERT INTO site (site_id,  '
 	+ 'zip)  '
 	+ 'VALUES (?,?,?,?,?,?)';
 
-//  loadDbEvaluation(site_id, evaluator_id, evaluation_id)
+//  from fn:loadDbEvaluation(site_id, evaluator_id, evaluation_id)
 var InsertStatement = 'INSERT INTO evaluation (site_id,  '
 	+ 'evaluator_id,  ' 
 	+ 'evaluation_id, '
 	+ 'date_loaded_to_device) '
 	+ 'VALUES (?,?,?,?)';
 
-// e.g., 
+// e.g., JSONP collection (URL with defined callback queried on evaluator_id)
+//
 /*test_collection: [
 	{"evaluation_id": "40380", // write to table evaluation 
 	  "completed": "1", // used to control whether object gets written to table; only write those that have not been completed (viz., "completed": 0)
@@ -126,8 +130,8 @@ var InsertStatement = 'INSERT INTO evaluation (site_id,  '
 			}
 	}] */
 
-// Load to remote: findAll where SiteEvaluation has been done or Site not exist -> TODO: use default backbone sync for REST API
-// SQLite queries; TODO: rewrite (ORDER BY and LIMIT were a kludge...):
+//Case Load to remote: findAll where SiteEvaluation has been done or Site not exist -> TODO: use default backbone sync for REST API
+// Webkit DB queries; TODO: rewrite (ORDER BY and LIMIT were a kludge...):
 
 // These queries pull a selected evaluation that has been completed.
 // Data are assembled for remote POST (see function assembleDataToPost: TODO rewrite to utilize native Backbone.sync) 
@@ -159,6 +163,7 @@ SelectStatement = 'SELECT * FROM evaluation_factor   '
 	+ 'WHERE evaluation_id = ?  ' + 'ORDER BY id Desc LIMIT 5';
 
 // e.g.,  assembled JSON to POST
+//
 /*test: {"evaluation_id": 44214,
 	"score": 20, // computed, but stored value
 	"rating": "EG", // computed by range (see function assembleDataToPost)
@@ -188,13 +193,13 @@ SelectStatement = 'SELECT * FROM evaluation_factor   '
 		}
 	} */
 
-// READ: findAll where SiteEvaluation not done for completion of evaluation - Site, SiteEvaluation -> override default Backbone.sync using model specific sync implementations
+// Case READ: findAll where SiteEvaluation not done for completion of evaluation - Site, SiteEvaluation -> override default Backbone.sync using model specific sync implementations
 // findAll where SiteEvaluation done for update of evaluation - Site, SiteEvaluation -> override default Backbone.sync using model specific sync implementations
 SelectStatement = 'SELECT * FROM site s  '
 	+ 'INNER JOIN evaluation e ON s.site_id = e.site_id '
 	+ 'ORDER BY s.site_id ';
 
-// from var selectLocation, to determine status of evaluation
+// from fn: var selectLocation, code determines status of evaluation
 
 /* complete = row.date_entered_on_device_by_evaluator;
 	notExists = row.no_longer_exists;
@@ -204,33 +209,34 @@ SelectStatement = 'SELECT * FROM site s  '
 		category = "evaluationNotComplete";
 	} */ 
 
-// category is used to control output of nested object site.address to select menu via Backbone template
+// variable "category" is used to control output of nested object site.address to select menu via Backbone template
 
-//READ: findBy id in sessionStorage for page navigation - Site, SiteEvaluation -> override default Backbone.sync using model specific sync implementations
+// Case READ: findBy id in sessionStorage for page navigation - Site, SiteEvaluation -> override default Backbone.sync using model specific sync implementations
 var	id = sessionStorage.ParameterID;
 
-// CREATE: EvaluationFactor, SiteMaintainer, EvaluationAward, EvaluationFeature, SiteGeolocation for new evaluation -> override default Backbone.sync using model specific sync implementations
+// Case CREATE: EvaluationFactor, SiteMaintainer, EvaluationAward, EvaluationFeature, SiteGeolocation for new evaluation -> override default Backbone.sync using model specific sync implementations
 
-//insert gardener name: insertGardener(siteId, gardenerName)
+//insert gardener name: fn insertGardener(siteId, gardenerName)
 var insertStatement = 'INSERT INTO site_maintainer   ' // was gardener
 	+ '(site_id, name)  VALUES (?,?)';
 
-// loadFactorToDb(value, label)
+// fn loadFactorToDb(value, label)
 var insertStatement = 'INSERT INTO evaluation_factor  '
 	+ '(factor_id, rating, evaluation_id)  ' + 'VALUES (?,?,?)';
 
-// loadFeatureToDb(value)
+// fn loadFeatureToDb(value)
 var insertStatement = 'INSERT INTO evaluation_feature  '
 	+ '(feature_id, evaluation_id)  ' 
 	+ 'VALUES (?,?)';
 
-// loadAwardToDb(value, comment)
+// fn loadAwardToDb(value, comment)
 var insertStatement = 'INSERT INTO evaluation_award  '
 	+ '(award_id, special_award_specified, evaluation_id)  '
 	+ 'VALUES (?,?,?)';
 
-//insertGeolocationToDb(latitude, longitude, accuracy, timeStamp, siteId)
+// fn insertGeolocationToDb(latitude, longitude, accuracy, timeStamp, siteId)
 // first, write to localstorage onSuccess call in onDeviceReady
+// need to use localstorage because of the asynchronous nature of the API call
 
 /*
 // initialize
@@ -246,39 +252,39 @@ localStorage.timeStamp = timeStamp;
 var insertStatement = 'INSERT INTO site_geolocation   '
 	+ '(site_id, latitude,longitude,accuracy,timestamp)  VALUES (?,?,?,?,?)';
 
-// UPDATE: EvaluationFactor, SiteMaintainer, EvluationAward, EvaluationFeature, SiteGeolocation for already completed evaluation -> override default Backbone.sync using model specific sync implementations
+// Case UPDATE: EvaluationFactor, SiteMaintainer, EvluationAward, EvaluationFeature, SiteGeolocation for already completed evaluation -> override default Backbone.sync using model specific sync implementations
 // TODO: need to create missing updates, since they do not exist in current version of app
-//updateHood(neighborhood)
+// fn updateHood(neighborhood)
 var updateStatement = 'UPDATE site   ' // get evaluation_id
 	+ 'SET neighborhood = ?  '
 	+ 'WHERE site_id IN (SELECT site_id FROM evaluation WHERE evaluation_id = ?)';
 
-// updateLocationPage()
+// fn updateLocationPage()
 var updateStatement = 'UPDATE evaluation   '
 	+ 'SET date_of_evaluation = ?  ' 
 	+ 'WHERE evaluation_id = ?';
 
-// updateExistence()
+// fn updateExistence()
 var updateStatement = 'UPDATE evaluation  ' 
 	+ 'SET no_longer_exists = 1 '
 	+ 'WHERE evaluation_id = ?';
 
-// updateEvaluationRatingComment(sumRating, generalComment)
+// fn updateEvaluationRatingComment(sumRating, generalComment)
 var updateStatement = 'UPDATE evaluation  ' 
 	+ 'SET sum_rating = ?,  '
 	+ 'comments = ?,  '
 	+ 'date_entered_on_device_by_evaluator  = ? '
 	+ 'WHERE evaluation_id = ?';
 
-// updateWhenPosted(id) 
+// fn updateWhenPosted(id) 
 var updateStatement = 'UPDATE evaluation   '
 	+ 'SET date_posted_to_remote = ?  ' 
 	+ 'WHERE evaluation_id = ?';
 
-// DELETE:  findBy id in sessionStorage for element deletion - Site, SiteEvaluation EvaluationFactor, SiteMaintainer, EvluationAward, EvaluationFeature, SiteGeolocation:] -> override default Backbone.sync using model specific sync implementations
+// Case DELETE:  findBy id in sessionStorage for element deletion - Site, SiteEvaluation EvaluationFactor, SiteMaintainer, EvluationAward, EvaluationFeature, SiteGeolocation:] -> override default Backbone.sync using model specific sync implementations
 // TODO: create queries, since they currently do not exist in app
 
-// LOAD to db
+// Case LOAD to db
 
 var createStatementSite = 'CREATE TABLE IF NOT EXISTS site  '
 				+ '(id INTEGER NOT NULL PRIMARY KEY,  '
@@ -346,7 +352,7 @@ executeSql(createStatementEvaluationAward);
 executeSql(createStatementEvaluationFactor);
 executeSql(createStatementEvaluationFeature);
 
-// DESTROY: kill db -> override default Backbone.sync using model specific sync implementations
+// Case DESTROY: kill db -> override default Backbone.sync using model specific sync implementations
 
 var dropStatementSiteGeolocation = 'DROP TABLE site_geolocation',
 	dropStatementSite = 'DROP TABLE site', 
@@ -364,28 +370,28 @@ executeSql(dropStatementEvaluationFactor);
 executeSql(dropStatementEvaluationFeature); 
 executeSql(dropStatementSiteMaintainer); 
 
-// LIST: 
-// loadEvaluation(id) 
+// Case LIST: 
+// fn loadEvaluation(id) 
 var selectStatement = 'SELECT * FROM evaluation e  '
 	+ 'WHERE e.evaluation_id = ?';
 
-// loadSite(id)
+// fn loadSite(id)
 var selectStatement = 'SELECT * FROM evaluation e INNER JOIN  '
 	+ 'site s ON s.site_id = e.site_id  ' + 'WHERE e.evaluation_id = ?';
 
-//  loadEvaluationAward(id)
+// fn loadEvaluationAward(id)
 var selectStatement = 'SELECT * FROM evaluation_award ea  '
 	+ 'WHERE ea.evaluation_id = ?';
 
-// loadEvaluationFactor(id) 
+// fn loadEvaluationFactor(id) 
 var selectStatement = 'SELECT * FROM  evaluation_factor ef  '
 	+ 'WHERE ef.evaluation_id = ?';
 
-//  loadEvaluationFeature(id)
+// fn loadEvaluationFeature(id)
 var selectStatement = 'SELECT * FROM  evaluation_feature ef  '
 	+ 'WHERE ef.evaluation_id = ?';
 
-// loadGeolocation(id)
+// fn loadGeolocation(id)
 var selectStatement = 'SELECT g.id, g.site_id, g.latitude, g.longitude, g.accuracy, g.timestamp, e.evaluation_id  '
 	+ 'FROM geo_location g INNER JOIN  '
 	+ 'site s ON g.site_id = s.site_id INNER JOIN evaluation e  '
@@ -393,14 +399,13 @@ var selectStatement = 'SELECT g.id, g.site_id, g.latitude, g.longitude, g.accura
 	+ 'WHERE e.evaluation_id = ?  '
 	+ 'GROUP BY g.id, g.site_id, g.latitude, g.longitude, g.accuracy, g.timestamp,e.evaluation_id ';
 
-// loadGardener(id)
+// fn loadGardener(id)
 var selectStatement = 'SELECT g.id, g.name, g.site_id, e.evaluation_id  '
 	+ 'FROM site_maintainer g INNER JOIN  '
 	+ 'site s ON s.site_id = g.site_id INNER JOIN  '
 	+ 'evaluation e ON s.site_id = e.site_id  '
 	+ 'WHERE e.evaluation_id = ?  '
 	+ 'GROUP BY g.id, g.name, g.site_id, e.evaluation_id ';
-
 
 // backbone-relational models to implement
 var SiteEvaluation,
@@ -433,7 +438,7 @@ Site = Backbone.AssociatedModel.extend({
 		{
 			relatedModel: SiteEvaluation,
 			type: Backbone.HasMany,
-			key: 'evaluation.id',
+			key: 'evaluation.id', // need to define an id here; cannot map directly to a given attribute as FK
 			reverseRelation: {
 				key: 'siteEvaluation.id',
 			},
@@ -493,6 +498,7 @@ Evaluation = Backbone.AssociatedModel.extend({
 		dateLoadedToDevice: '', // when loaded from remote
 		datePostedToRemote: '', // when posted to remote
 		dateUpdated: '', // update to evaluation
+		dateOfEvaluation: '' // date of evaluation: if not provided, use dateEvaluated
 		evaluator: { // evaluator assigned to evaluation
 			firstName: '',
 			lastName: '',
