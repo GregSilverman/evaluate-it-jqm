@@ -24,9 +24,9 @@ Process:
 * For Factor, rate each item using scale "Ratings for each factor"
 * Sum total ratings
 * If sum of total ratings is an Exceptional Garden (>= 18 total points), then you may consider the garden for any award; there are the following stipulations:
-+  Best boulevard or Best container garden can be awarded to any garden
-+ Only one award can be given to a Garden
-+ Use of "Special Garden" must state the type of garden award (e.g., "Best sustainable school produce garden")
+1. Best boulevard or Best container garden can be awarded to any garden
+1. Only one award can be given to a Garden
+1. Use of "Special Garden" must state the type of garden award (e.g., "Best sustainable school produce garden")
 
 Future:
 --------
