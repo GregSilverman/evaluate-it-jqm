@@ -437,20 +437,14 @@ Site = Backbone.AssociatedModel.extend({
 	relations: [
 		{
 			relatedModel: SiteEvaluation,
-			type: Backbone.HasMany,
+			type: Backbone.Many,
 			key: 'evaluation.id', // need to define an id here; cannot map directly to a given attribute as FK
-			reverseRelation: {
-				key: 'siteEvaluation.id',
-			},
 		},
 		{
 			relatedModel: SiteMaintainer,
-		    type: Backbone.HasMany,
+		    type: Backbone.Many,
 		    key: 'siteMaintainer.id',
-		    reverseRelation: {
-		        key: 'siteEvaluation.id',
-		    }
-		}],
+	    }],
     sync: function (method, model, options) {} // add CRUD operations here, based on use cases 
 });
 
@@ -498,7 +492,7 @@ Evaluation = Backbone.AssociatedModel.extend({
 		dateLoadedToDevice: '', // when loaded from remote
 		datePostedToRemote: '', // when posted to remote
 		dateUpdated: '', // update to evaluation
-		dateOfEvaluation: '' // date of evaluation: if not provided, use dateEvaluated
+		dateOfEvaluation: '', // date of evaluation: if not provided, use dateEvaluated
 		evaluator: { // evaluator assigned to evaluation
 			firstName: '',
 			lastName: '',
@@ -511,28 +505,19 @@ Evaluation = Backbone.AssociatedModel.extend({
 	relations: [ 
 		{
 			relatedModel: EvaluationAward,
-	        type: Backbone.HasOne,
+	        type: Backbone.One,
 	        key: 'EvaluationAward.id',
-	        reverseRelation: {
-	            key: 'SiteEvaluation.id',
-	        }
-		},
+	    },
 		{
 			relatedModel: EvaluationFactorScorecard,
-	        type: Backbone.HasMany,
+	        type: Backbone.Many,
 	        key: 'EvaluationFactorScorecard.id',
-	        reverseRelation: {
-	            key: 'SiteEvaluation.id',
-	        }
-        }, 
+	    }, 
 		{
 			relatedModel: EvaluationFeature,
-	        type: Backbone.HasMany,
+	        type: Backbone.Many,
 	        key: 'EvaluationFeature.id',
-	        reverseRelation: {
-	            key: 'SiteEvaluation.id',
-	        }
-		},  
+        },  
     ],
     sync: function (method, model, options) {} // add CRUD operations here, based on use cases
 });
