@@ -432,18 +432,20 @@ Site = Backbone.AssociatedModel.extend({
 			longitude: '',
 			accuracy: '',
 			timestamp: ''
-		}
+		},
+		hasEvaluation: [],
+		hasSiteMaintainer: [],
 	},
 	relations: [
 		{
 			relatedModel: SiteEvaluation,
 			type: Backbone.Many,
-			key: 'evaluation.id', // need to define an id here; cannot map directly to a given attribute as FK
+			key: 'hasEvaluation', // need to define an linking id here that defines the relationship to the nested obbject; cannot map directly to a given attribute as FK
 		},
 		{
 			relatedModel: SiteMaintainer,
 		    type: Backbone.Many,
-		    key: 'siteMaintainer.id',
+		    key: 'hasSiteMaintainer',
 	    }],
     sync: function (method, model, options) {} // add CRUD operations here, based on use cases 
 });
@@ -501,22 +503,25 @@ Evaluation = Backbone.AssociatedModel.extend({
 		noLongerExists: false,
 		comments: '',
 		evaluationType: '', // link to EvaluationType.id,
+		hasEvaluationAward: {},
+		hasEvaluationFactorScorecard: [],
+		hasEvaluationFeature: [],
 	},
 	relations: [ 
 		{
 			relatedModel: EvaluationAward,
 	        type: Backbone.One,
-	        key: 'EvaluationAward.id',
+	        key: 'hasEvaluationAward',
 	    },
 		{
 			relatedModel: EvaluationFactorScorecard,
 	        type: Backbone.Many,
-	        key: 'EvaluationFactorScorecard.id',
+	        key: 'hasEvaluationFactorScorecard',
 	    }, 
 		{
 			relatedModel: EvaluationFeature,
 	        type: Backbone.Many,
-	        key: 'EvaluationFeature.id',
+	        key: 'hasEvaluationFeature',
         },  
     ],
     sync: function (method, model, options) {} // add CRUD operations here, based on use cases
