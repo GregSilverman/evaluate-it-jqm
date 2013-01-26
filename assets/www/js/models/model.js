@@ -414,7 +414,7 @@ var SiteEvaluation,
 	EvaluationFactorScorecard,
 	Site;
 
-//parent class
+//parent class of object graph
 Site = Backbone.AssociatedModel.extend({
 	default: {
 		id: '_id',
@@ -438,14 +438,14 @@ Site = Backbone.AssociatedModel.extend({
 	},
 	relations: [
 		{
-			relatedModel: SiteEvaluation,
+			relatedModel: Evaluation,
 			type: Backbone.Many,
-			key: 'hasEvaluation', // need to define an linking id here that defines the relationship to the nested obbject; cannot map directly to a given attribute as FK
+			key: 'is_evaluated_in_an', // linking id that defines the relationship to the nested object, e.g., site is evaluated in an evaluation
 		},
 		{
 			relatedModel: SiteMaintainer,
 		    type: Backbone.Many,
-		    key: 'hasSiteMaintainer',
+		    key: 'is_maintained_by_a', // site is maintained by a site maintainer
 	    }],
     sync: function (method, model, options) {} // add CRUD operations here, based on use cases 
 });
@@ -511,17 +511,17 @@ Evaluation = Backbone.AssociatedModel.extend({
 		{
 			relatedModel: EvaluationAward,
 	        type: Backbone.One,
-	        key: 'hasEvaluationAward',
+	        key: 'may_be_awarded', // an evaluation may be awarded an evaluation award
 	    },
 		{
 			relatedModel: EvaluationFactorScorecard,
 	        type: Backbone.Many,
-	        key: 'hasEvaluationFactorScorecard',
+	        key: 'is_scored_by_an', // an evaluation is scored by an evaluation factor scorecard 
 	    }, 
 		{
 			relatedModel: EvaluationFeature,
 	        type: Backbone.Many,
-	        key: 'hasEvaluationFeature',
+	        key: 'may_feature_an', // an evaluation may feature an evaluation feature
         },  
     ],
     sync: function (method, model, options) {} // add CRUD operations here, based on use cases
