@@ -445,7 +445,7 @@ Site = Backbone.AssociatedModel.extend({
 		{
 			relatedModel: SiteMaintainer,
 		    type: Backbone.Many,
-		    key: 'is_maintain', // site is maintained
+		    key: 'is_maintained', // site is maintained
 	    }],
     sync: function (method, model, options) {} // add CRUD operations here, based on use cases 
 });
