@@ -440,12 +440,12 @@ Site = Backbone.AssociatedModel.extend({
 		{
 			relatedModel: Evaluation,
 			type: Backbone.Many,
-			key: 'is_evaluated_in_an', // linking id that defines the relationship to the nested object, e.g., site is evaluated in an evaluation
+			key: 'is_evaluated', // linking id that defines the relationship to the nested object, e.g., site is evaluated
 		},
 		{
 			relatedModel: SiteMaintainer,
 		    type: Backbone.Many,
-		    key: 'is_maintained_by_a', // site is maintained by a site maintainer
+		    key: 'is_maintain', // site is maintained
 	    }],
     sync: function (method, model, options) {} // add CRUD operations here, based on use cases 
 });
@@ -511,17 +511,17 @@ Evaluation = Backbone.AssociatedModel.extend({
 		{
 			relatedModel: EvaluationAward,
 	        type: Backbone.One,
-	        key: 'may_be_awarded', // an evaluation may be awarded an evaluation award
+	        key: 'may_award', // an evaluation may award
 	    },
 		{
 			relatedModel: EvaluationFactorScorecard,
 	        type: Backbone.Many,
-	        key: 'is_scored_by_an', // an evaluation is scored by an evaluation factor scorecard 
+	        key: 'is_scored', // an evaluation is scored
 	    }, 
 		{
 			relatedModel: EvaluationFeature,
 	        type: Backbone.Many,
-	        key: 'may_feature_an', // an evaluation may feature an evaluation feature
+	        key: 'may_feature', // an evaluation may feature
         },  
     ],
     sync: function (method, model, options) {} // add CRUD operations here, based on use cases
