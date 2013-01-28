@@ -165,26 +165,16 @@
         <script type="text/template" id="actions-template">
 
             <% _.each(actions, function(item) { %>
-            <li class="ui-li ui-li-static ui-btn-up-c ui-corner-top">
-            <%= item.category %><%= item.location %>
+                <li class="ui-li ui-li-static ui-btn-up-c ui-corner-top">
+                <!--<%= item.category %><%= item.location %>-->
+                <a href="#<%=item.category%>Thing" onclick="sessionStorage.ParameterID='<%=item.id %>'"> <%=item.category %><%= item.location %>
             <% }); %>
-
-        </script>
-
-        <!-- Underscore Template that is used to display all of the Category Models -->
-        <!--        <script id="categoryItems" type="text/template">
-
-        <% _.each(json,function(item,id) { %>
-        <li data-id="<%= id %>" class="ui-li ui-li-static ui-btn-up-c ui-corner-top">
-        <a href="#<%=item.category %>" onclick="sessionStorage.ParameterID='<%=item.id %>'"> <%=item.category %><%= item.location %>
-        </li>
-        <% }); %> -->
 
         </script>
 
         <!-- TODO: convert to backbone form -->
         <!-- form div for site to evaluate -->
-        <div data-role="page" data-theme="e" id="evaluationNotCompleteOld">
+        <div data-role="page" data-theme="e" id="evaluationNotCompleteForm">
             <form  id="locationForm" >
                 <div data-role="content">
 

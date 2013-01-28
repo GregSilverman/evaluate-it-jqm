@@ -140,7 +140,7 @@ $(function () {
 
 // when loading this element retrieve value of ID from Session Storage: this
 // will allow for use in data linking
-$('#toEvaluate').live('pageshow', function (event, ui) {
+$('#evaluationNotCompleteThing').live('pageshow', function (event, ui) {
 	
 	console.log('Parameter ID: ' + sessionStorage.ParameterID);
 
@@ -431,7 +431,6 @@ var selectLocation = function (callback) {
 // test underscore template
 // return  json object 
 function jsonOut(json) { 
-	
 	 
 	json =  "Data:" + JSON.stringify(json);
 	console.log(json);

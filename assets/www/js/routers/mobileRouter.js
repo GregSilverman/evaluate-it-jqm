@@ -1,83 +1,66 @@
-// Mobile Router
-// =============
+var ActionsRoute = Backbone.Router.extend({
+		
+		routes: {
+			'': 'main',
+			'category?:type': 'loader',
+			'evaluationNotCompleteForm': 'evaluate',
+		}, 
+		evaluate: function () {
+			$.mobile.changePage("#evaluationNotCompleteForm", {reverse: false, changeHash: false});
+		},
+		main: function () {
+			$.mobile.changePage("#main", {reverse: false, changeHash: false});
+		},
+		
+		// load evaluations by category of done/not done
+		loader: function (type) {
+			alert("type:" + type);
+	    
+			selectTheseCategories(function (Actions, ActionView) {
+				// filter out chosen category to render in view
+				var categories = [];
+				selectLocation(function (data) {
+					//alert("DATA out:" + JSON.stringify(data));
+					categories = _.filter(data, function (row) {
+						return row.category === type;
+					});
+					
+					// Instantiates a new Category View
+					var actions = new Actions(categories), 
+						evaluationNotCompleteView,
+						evaluationCompleteView;
+				
+					switch (type) { 
+		            case 'evaluationNotComplete': 
+		                evaluationNotCompleteView = new ActionView({el: "#evaluationNotComplete", collection: actions});
+		                evaluationNotCompleteView.render();
+		                break;
+		            case 'evaluationComplete': 
+		                evaluationCompleteView = new ActionView({el: "#evaluationComplete", collection: actions});
+		                evaluationCompleteView.render();
+		                break;
+		            default:
+		                alert('Nobody Wins!');
+			        }
+			        
+			        alert("Hola!" + this);
+		        });
+				$.mobile.changePage("#" + type, {reverse: false, changeHash: false});
+			});
+		}
+	});   
 
-// Includes file dependencies
-define([ "jquery","backbone", "../models/CategoryModel", "../collections/CategoriesCollection", "../views/CategoryView" ], function( $, Backbone, CategoryModel, CategoriesCollection, CategoryView ) {
-
-    // Extends Backbone.Router
-    var CategoryRouter = Backbone.Router.extend( {
-
-        // The Router constructor
-        initialize: function() {
-
-            // Instantiates a new Animal Category View
-            this.animalsView = new CategoryView( { el: "#animals", collection: new CategoriesCollection( [] , { type: "animals" } ) } );
-
-            // Instantiates a new Colors Category View
-            this.colorsView = new CategoryView( { el: "#colors", collection: new CategoriesCollection( [] , { type: "colors" } ) } );
-
-            // Instantiates a new Vehicles Category View
-            this.vehiclesView = new CategoryView( { el: "#vehicles", collection: new CategoriesCollection( [] , { type: "vehicles" } ) } );
-
-            // Tells Backbone to start watching for hashchange events
-            Backbone.history.start();
-
-        },
-
-        // Backbone.js Routes
-        routes: {
-
-            // When there is no hash bang on the url, the home method is called
-            "": "home",
-
-            // When #category? is on the url, the category method is called
-            "category?:type": "category"
-
-        },
-
-        // Home method
-        home: function() {
-
-            // Programatically changes to the categories page
-            $.mobile.changePage( "#categories" , { reverse: false, changeHash: false } );
-
-        },
-
-        // Category method that passes in the type that is appended to the url hash
-        category: function(type) {
-
-            // Stores the current Category View  inside of the currentView variable
-            var currentView = this[ type + "View" ];
-
-            // If there are no collections in the current Category View
-            if(!currentView.collection.length) {
-
-                // Show's the jQuery Mobile loading icon
-                $.mobile.loading( "show" );
-
-                // Fetches the Collection of Category Models for the current Category View
-                currentView.collection.fetch().done( function() {
-
-                    // Programatically changes to the current categories page
-                    $.mobile.changePage( "#" + type, { reverse: false, changeHash: false } );
-    
-                } );
-
-            }
-
-            // If there already collections in the current Category View
-            else {
-
-                // Programatically changes to the current categories page
-                $.mobile.changePage( "#" + type, { reverse: false, changeHash: false } );
-
-            }
-
-        }
-
-    } );
-
-    // Returns the Router class
-    return CategoryRouter;
-
-} );
+$(document).ready(function () {
+	
+	// Prevents all anchor click handling including the addition of active button state and alternate link blurring.
+	$.mobile.linkBindingEnabled = false;
+	
+	// Disabling this will prevent jQuery Mobile from handling hash changes
+	$.mobile.hashListeningEnabled = false;
+	
+	// instantiate new router 
+	var router = new ActionsRoute();
+	
+	// dispatch and monitor routing
+	Backbone.history.start();
+});
