@@ -8,9 +8,10 @@ Testing: Start script localHttpServerStart.sh in assets/www folder and connect v
 
 To Do: 
 *  Add detailed description 
-*  Refactor code
-*  Add functionality for other types of evaluations
+*  Refactor code: WORK IN PROCESS!!!!!!!!!
+*  Add functionality for other types of evaluations: IN PROCESS
 *  Create iOS branch
 
 Note: You will need to configure the global URL variables for the Ajax jsonp call, as well as for the POST to the web server with the completed evaluation object, both in the file assets/www/js/evaluate.it.config.js (not included in this repository). You can also use this file for other sensitive configuration data storage. **Still need to set 'environ' and 'action' variables in index.html.** 
 
+Code is currently undergoing significant modifications towards a brave new framework... stay tuned!

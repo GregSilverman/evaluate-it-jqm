@@ -62,24 +62,41 @@
         </style>
     </head>
     <body>
-<div data-role="page" id="mainPage" data-theme="e">
-            <form  id="mainForm" >
-                <div data-role="content">
-                    <img style="width: 288px; height: 100px" src="images/logo.gif" />
-                    <fieldset>
-                        <div data-role="fieldcontain">
-                            <select id="mainMenu" data-theme="a" data-mini="true" data-inline="true">
-                                <option value="" selected> Select evaluation type </option><!-- TODO: add lookup in site_type -->
-                                <option value="1"> First Round Garden Evaluation</option>
-                                <option value="2"> Second Round Garden Evaluation</option>
-                                <option value="3"> Rain Garden Inspection</option>
-                            </select>
-                            <a href="#testDb" data-role="button" data-inline="true" data-theme="a" value="submit-value" >Data management</a>
-                            <a href="#evaluations" data-role="button" data-inline="true" data-theme="a" value="submit-value" onClick="selectLocation()">Select Location</a>
-                        </div>
-                    </fieldset>
-                </div>
-            </form>
+        <!-- <div data-role="page" id="mainPage" data-theme="e">
+        <form  id="mainForm" >
+        <div data-role="content">
+        <img style="width: 288px; height: 100px" src="images/logo.gif" />
+        <fieldset>
+        <div data-role="fieldcontain">
+        <select id="mainMenu" data-theme="a" data-mini="true" data-inline="true">
+        <option value="" selected> Select evaluation type </option>
+        <option value="1"> First Round Garden Evaluation</option>
+        <option value="2"> Second Round Garden Evaluation</option>
+        <option value="3"> Rain Garden Inspection</option>
+        </select>
+        <a href="#testDb" data-role="button" data-inline="true" data-theme="a" value="submit-value" >Data management</a>
+        <a href="#evaluations" data-role="button" data-inline="true" data-theme="a" value="submit-value" onClick="selectLocation()">Select Location</a>
+        </div>
+        </fieldset>
+        </div>
+        </form>
+        </div> -->
+
+        <div id="main" data-role="page">
+            <div data-role="header">
+                <h1>Categories</h1>
+            </div><!-- /header -->
+            <div data-role="content">
+                <h2>Select Category to View:</h2>
+                <ul data-role="listview" data-inset="true">
+                    <li>
+                        <a href="#category?evaluationNotComplete" class="evaluationNotComplete">Evaluate a Site</a>
+                    </li>
+                    <li>
+                        <a href="#category?evaluationComplete" class="evaluationComplete">Load Evaluation to Remote</a>
+                    </li>
+                </ul>
+            </div><!-- /content -->
         </div>
 
         <!-- test functions -->
@@ -125,32 +142,49 @@
 
         <!-- underscore template test -->
 
-        <div id="evaluations" data-role="page" data-title="Evaluations">
-
+        <div id="evaluationNotComplete" data-role="page">
             <div data-role="header">
-                <h1>Site to evaluate</h1>
+                <h1>Select a site to evaluate:</h1>
             </div><!-- /header -->
 
             <div data-role="content">
                 <ul data-role="listview" data-inset="true"></ul>
             </div><!-- /content -->
-
         </div>
-        
-        <!-- Underscore Template that is used to display all of the Category Models -->
-        <script id="categoryItems" type="text/template">
 
-            <% _.each(json,function(item,id) { %>
-                <li data-id="<%= id %>" class="ui-li ui-li-static ui-btn-up-c ui-corner-top">
-                <a href="#<%=item.category %>" onclick="sessionStorage.ParameterID='<%=item.id %>'"> <%=item.category %><%= item.location %>
-                </li>
+        <div id="evaluationComplete" data-role="page">
+            <div data-role="header">
+                <h1>Load evaluation to remote:</h1>
+            </div><!-- /header -->
+
+            <div data-role="content">
+                <ul data-role="listview" data-inset="true"></ul>
+            </div><!-- /content -->
+        </div>
+
+        <script type="text/template" id="actions-template">
+
+            <% _.each(actions, function(item) { %>
+            <li class="ui-li ui-li-static ui-btn-up-c ui-corner-top">
+            <%= item.category %><%= item.location %>
             <% }); %>
+
+        </script>
+
+        <!-- Underscore Template that is used to display all of the Category Models -->
+        <!--        <script id="categoryItems" type="text/template">
+
+        <% _.each(json,function(item,id) { %>
+        <li data-id="<%= id %>" class="ui-li ui-li-static ui-btn-up-c ui-corner-top">
+        <a href="#<%=item.category %>" onclick="sessionStorage.ParameterID='<%=item.id %>'"> <%=item.category %><%= item.location %>
+        </li>
+        <% }); %> -->
 
         </script>
 
         <!-- TODO: convert to backbone form -->
         <!-- form div for site to evaluate -->
-        <div data-role="page" data-theme="e" id="evaluationNotComplete">
+        <div data-role="page" data-theme="e" id="evaluationNotCompleteOld">
             <form  id="locationForm" >
                 <div data-role="content">
 
@@ -342,7 +376,7 @@
         <!-- form div for awards: control display  -->
         <div data-role="page" data-theme="e" id="award">
 
-        <!-- TODO: templatize this -->
+            <!-- TODO: templatize this -->
             <form  id="awardForm" >
                 <div data-role="fieldcontain">
                     <label for="awardMenu"> <em>* </em>Consider this garden for: </label>
